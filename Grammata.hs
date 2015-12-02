@@ -5,6 +5,7 @@
 
 module Grammata (
   module Grammata.Types,
+  module Grammata.Parse,
   module Grammata.Format.Html,
   module Grammata.Format.PlainText,
   module Grammata.Format.TeX
@@ -18,6 +19,7 @@ import Data.Typeable
 import Data.Monoid ((<>))
 
 import Grammata.Types
+import Grammata.Parse
 import Grammata.Format.Html
 import Grammata.Format.PlainText
 import Grammata.Format.TeX
