@@ -39,6 +39,28 @@ instance Format f => IsString (Doc Inline f) where
 class ToEmph a where
   emph :: Doc Inline a -> Doc Inline a
 
+class ToStrong a where
+  strong :: Doc Inline a -> Doc Inline a
+
+data LinkData = LinkData { uri :: Text, title :: Text }
+
+class ToLink a where
+  link :: LinkData -> Doc Inline a -> Doc Inline a
+
 class ToPara a where
   para :: Doc Inline a -> Doc Block a
+
+class ToBlockQuote a where
+  blockQuote :: Doc Block a -> Doc Block a
+
+data ListType =
+    BulletList
+  | OrderedList { start :: Int }
+  deriving (Show, Read, Eq, Ord)
+
+class ToList a where
+  list :: ListType -> [Doc Block a] -> Doc Block a
+
+class ToHeading a where
+  heading :: Int -> Doc Inline a -> Doc Block a
 

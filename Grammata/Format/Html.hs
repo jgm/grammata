@@ -21,6 +21,9 @@ instance ToEmph Html where
 instance ToPara Html where
   para (Doc t) = Doc (inTag "p" t)
 
+instance ToHeading Html where
+  heading lev (Doc t) = Doc (inTag ("h" <> T.pack (show lev)) t)
+
 -- utility functions
 inTag :: Text -> Text -> Text
 inTag tag t = "<" <> tag <> ">" <> t <> "</" <> tag <> ">"
