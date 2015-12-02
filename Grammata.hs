@@ -49,3 +49,10 @@ emphLo = emph lo
 -- para (emph "hi" <> "lo") <> para "lo" :: Doc Block TeX
 -- para (emph "hi" <> "lo") <> para "lo" :: Doc Block Html
 
+
+-- Generic (insensitive to format):
+double :: Doc Inline a -> Doc Inline a
+double t = t <> t
+
+doubemphLo :: Doc Inline Html
+doubemphLo = double emphLo
