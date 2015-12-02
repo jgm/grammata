@@ -11,6 +11,7 @@ import Data.String
 import Data.Data
 import Data.Typeable
 import Data.Monoid ((<>))
+import Data.Map as M
 
 -- | Contexts
 data Inline
@@ -19,16 +20,18 @@ data Block
 -- | A document or document-part.
 -- @c@ is a phantom type to track the context.
 -- @f@ is a phantom type to track the format.
-newtype Doc c f = Doc { render :: Text }
+data Doc c f = Doc { variables :: M.Map Text Text
+                   , body      :: Text
+                   }
  deriving (Show, Read, Eq, Ord, Data, Typeable)
 
 instance Monoid (Doc Inline f) where
-  mappend (Doc t1) (Doc t2) = Doc (t1 <> t2)
-  mempty = Doc mempty
+  mappend (Doc v1 t1) (Doc v2 t2) = Doc (v1 <> v2) (t1 <> t2)
+  mempty = Doc mempty mempty
 
 instance Monoid (Doc Block f) where
-  mappend (Doc t1) (Doc t2) = Doc (t1 <> "\n\n" <> t2)
-  mempty = Doc mempty
+  mappend (Doc v1 t1) (Doc v2 t2) = Doc (v1 <> v2) (t1 <> "\n\n" <> t2)
+  mempty = Doc mempty mempty
 
 class Format a where
   lit :: Text -> Doc Inline a

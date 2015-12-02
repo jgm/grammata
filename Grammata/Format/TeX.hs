@@ -13,13 +13,13 @@ import Grammata.Types
 data TeX
 
 instance Format TeX where
-  lit = Doc . escapeTeX
+  lit t = Doc mempty (escapeTeX t)
 
 instance ToEmph TeX where
-  emph (Doc t) = Doc ("{\\em " <> t <> "}")
+  emph (Doc v t) = Doc v ("{\\em " <> t <> "}")
 
 instance ToPara TeX where
-  para (Doc t) = Doc t
+  para (Doc v t) = Doc v t
 
 escapeTeX :: Text -> Text
 escapeTeX = T.concatMap escapeTeXChar

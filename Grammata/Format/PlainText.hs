@@ -10,10 +10,10 @@ import Grammata.Types
 data PlainText
 
 instance Format PlainText where
-  lit = Doc . id
+  lit = Doc mempty . id
 
 instance ToEmph PlainText where
-  emph (Doc t) = Doc t
+  emph = id
 
 instance ToPara PlainText where
-  para (Doc t) = Doc t
+  para (Doc v t) = Doc v t

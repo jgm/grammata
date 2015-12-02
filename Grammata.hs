@@ -27,13 +27,13 @@ litfoo = "foo&bar" -- same as lit "foo&bar" because of IsString instance
 
 -- Examples
 hi :: Doc Inline Html
-hi = Doc "<em>hi</em>"
+hi = Doc mempty "<em>hi</em>"
 
 lo :: Doc Inline Html
-lo = Doc "lo"
+lo = Doc mempty "lo"
 
 hiblock :: Doc Block Html
-hiblock = Doc "<p>hi</p>"
+hiblock = Doc mempty "<p>hi</p>"
 
 -- hi <> lo is a Doc Html
 -- hiblock <> lo is a type erro

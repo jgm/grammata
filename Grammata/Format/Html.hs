@@ -13,16 +13,16 @@ import Grammata.Types
 data Html
 
 instance Format Html where
-  lit = Doc . escapeHtml
+  lit = Doc mempty . escapeHtml
 
 instance ToEmph Html where
-  emph (Doc t) = Doc (inTag "em" t)
+  emph (Doc v t) = Doc v (inTag "em" t)
 
 instance ToPara Html where
-  para (Doc t) = Doc (inTag "p" t)
+  para (Doc v t) = Doc v (inTag "p" t)
 
 instance ToHeading Html where
-  heading lev (Doc t) = Doc (inTag ("h" <> T.pack (show lev)) t)
+  heading lev (Doc v t) = Doc v (inTag ("h" <> T.pack (show lev)) t)
 
 -- utility functions
 inTag :: Text -> Text -> Text
