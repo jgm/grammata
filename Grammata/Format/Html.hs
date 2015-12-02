@@ -3,7 +3,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Grammata.Format.Html where
+module Grammata.Format.Html (Html) where
 
 import Data.Text (Text)
 import qualified Data.Text as T

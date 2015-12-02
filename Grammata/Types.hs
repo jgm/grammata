@@ -2,6 +2,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Grammata.Types where
 
@@ -12,6 +14,7 @@ import Data.Data
 import Data.Typeable
 import Data.Monoid ((<>))
 import Data.Map as M
+import qualified Data.Attoparsec.Text as P
 
 -- | Contexts
 data Inline
@@ -39,6 +42,8 @@ class Format a where
 instance Format f => IsString (Doc Inline f) where
   fromString = lit . fromString
 
+-- Inlines
+
 class ToEmph a where
   emph :: Doc Inline a -> Doc Inline a
 
@@ -49,6 +54,8 @@ data LinkData = LinkData { uri :: Text, title :: Text }
 
 class ToLink a where
   link :: LinkData -> Doc Inline a -> Doc Inline a
+
+-- Blocks
 
 class ToPara a where
   para :: Doc Inline a -> Doc Block a

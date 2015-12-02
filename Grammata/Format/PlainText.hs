@@ -3,7 +3,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Grammata.Format.PlainText where
+module Grammata.Format.PlainText (PlainText) where
 
 import Grammata.Types
 

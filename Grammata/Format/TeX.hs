@@ -3,7 +3,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Grammata.Format.TeX where
+module Grammata.Format.TeX (TeX) where
 
 import Data.Text (Text)
 import qualified Data.Text as T
