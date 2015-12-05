@@ -22,6 +22,15 @@ import Grammata.Types
 import Grammata.Format.Html
 import Grammata.Format.TeX
 
+-- example
+mydoc :: Doc (Html Block)
+mydoc = double $
+  para ("This is a " <> emph "nice" <> "document")
+  <> para "Another paragraph"
+
+renderedDoc :: Text
+renderedDoc = render mydoc
+
 -- Generic (insensitive to format):
 double :: Monoid a => Doc a -> Doc a
 double t = t <> t
