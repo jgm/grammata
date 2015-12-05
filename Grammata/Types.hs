@@ -33,6 +33,10 @@ runDoc doc =
       (res, s', _) = runRWS doc (DocState mempty) s
   in  (res, s')
 
+class Format f where
+  text   :: Text -> Doc (f Inline)
+  toText :: f c -> Text
+
 render :: Format f => Doc (f c) -> Text
 render = toText . fst . runDoc
 
@@ -43,10 +47,6 @@ instance Show f => Show (Doc f) where
 instance Monoid a => Monoid (Doc a) where
   mempty = return mempty
   mappend x y = do{ xres <- x; yres <- y; return (xres <> yres) }
-
-class Format f where
-  text   :: Text -> Doc (f Inline)
-  toText :: f c -> Text
 
 instance Format f => IsString (Doc (f Inline)) where
   fromString = text . fromString

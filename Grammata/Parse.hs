@@ -20,14 +20,6 @@ type Parser = P.Parser
 controlSeq :: Text -> Parser ()
 controlSeq name = P.char '\\' *> P.string name *> P.skipSpace
 
-parseBlocks :: (Foldable f, Format f, ToPara f) => Text -> Either String (Doc (f Block))
-parseBlocks t = P.parseOnly (mconcat <$> P.many1 pBlock) t
-
-parseInlines :: (Foldable f, Format f) => Text -> Either String (Doc (f Inline))
-parseInlines t = P.parseOnly (mconcat <$> P.many1 pInline) t
-
-pBlock :: (Foldable f, Format f, ToPara f) => P.Parser (Doc (f Block))
-pBlock = pPara
 
 pInline :: Format f => P.Parser (Doc (f Inline))
 pInline = pText <|> pNewline
@@ -44,6 +36,14 @@ pNewline = do
      then fail "blankline"
      else return (text " ")
 
-pPara :: (Foldable f, Format f, ToPara f) => P.Parser (Doc (f Block))
-pPara = para . mconcat <$> P.many1 pInline <* P.skipSpace
+parseInlines :: (Monoid (f Inline), Format f) => Text -> Either String (Doc (f Inline))
+parseInlines t = P.parseOnly (mconcat <$> P.many1 pInline) t
 
+parseBlocks :: (Monoid (f Block), Monoid (f Inline), Format f, ToPara f) => Text -> Either String (Doc (f Block))
+parseBlocks t = P.parseOnly (mconcat <$> P.many1 pBlock) t
+
+pBlock :: (Monoid (f Block), Monoid (f Inline), Format f, ToPara f) => P.Parser (Doc (f Block))
+pBlock = pPara
+
+pPara :: (Monoid (f Inline), Format f, ToPara f) => P.Parser (Doc (f Block))
+pPara = para . mconcat <$> P.many1 pInline <* P.skipSpace
