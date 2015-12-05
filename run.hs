@@ -17,8 +17,8 @@ interpretDoc :: String -> String -> Interpreter ()
 interpretDoc doc format = do
   loadModules ["Grammata.hs"]
   set [languageExtensions := [OverloadedStrings]]
-  setImportsQ [("Prelude", Nothing), ("Data.Monoid", Nothing), ("Grammata", Nothing), ("Data.String", Nothing)]
+  setImportsQ [("Prelude", Nothing), ("Data.Monoid", Nothing), ("Control.Monad.RWS", Nothing), ("Control.Monad.Identity", Nothing), ("Grammata", Nothing), ("Data.String", Nothing)]
   case format of
-       "html"  -> liftIO . T.putStrLn . body =<< interpret doc (as :: Doc Block Html)
-       "tex"   -> liftIO . T.putStrLn . body =<< interpret doc (as :: Doc Block TeX)
+       "html"  -> liftIO . T.putStrLn . render =<< interpret doc (as :: Doc (Html Block))
+       "tex"   -> liftIO . T.putStrLn . render =<< interpret doc (as :: Doc (TeX Block))
        _       -> error "Unknown format"

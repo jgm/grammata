@@ -33,8 +33,8 @@ runDoc doc =
       (res, s', _) = runRWS doc (DocState mempty) s
   in  (res, s')
 
-render :: Doc f -> f
-render = fst . runDoc
+render :: Format f => Doc (f c) -> Text
+render = toText . fst . runDoc
 
 instance Show f => Show (Doc f) where
   show x = "<" ++ show res ++ ", " ++ show s ++ ">"

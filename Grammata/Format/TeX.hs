@@ -29,7 +29,7 @@ instance ToEmph TeX where
 
 instance ToPara TeX where
   para x = do (TeX t) <- x
-              return (TeX t)
+              return (TeX (t <> "\n\n"))
 
 escapeTeX :: Text -> TeX Inline
 escapeTeX = TeX . T.concatMap escapeTeXChar
