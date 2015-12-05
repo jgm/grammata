@@ -20,30 +20,30 @@ type Parser = P.Parser
 controlSeq :: Text -> Parser ()
 controlSeq name = P.char '\\' *> P.string name *> P.skipSpace
 
-parseBlocks :: (Format a, ToPara a) => Text -> Either String (Doc Block a)
+parseBlocks :: (Foldable f, Format f, ToPara f) => Text -> Either String (Doc (f Block))
 parseBlocks t = P.parseOnly (mconcat <$> P.many1 pBlock) t
 
-parseInlines :: Format a => Text -> Either String (Doc Inline a)
+parseInlines :: (Foldable f, Format f) => Text -> Either String (Doc (f Inline))
 parseInlines t = P.parseOnly (mconcat <$> P.many1 pInline) t
 
-pBlock :: (Format a, ToPara a) => P.Parser (Doc Block a)
+pBlock :: (Foldable f, Format f, ToPara f) => P.Parser (Doc (f Block))
 pBlock = pPara
 
-pInline :: Format a => P.Parser (Doc Inline a)
+pInline :: Format f => P.Parser (Doc (f Inline))
 pInline = pText <|> pNewline
 
-pText :: Format a => P.Parser (Doc Inline a)
-pText = lit <$> P.takeWhile1 (P.notInClass "\n\\{}%")
+pText :: Format f => P.Parser (Doc (f Inline))
+pText = text <$> P.takeWhile1 (P.notInClass "\n\\{}%")
 
-pNewline :: Format a => P.Parser (Doc Inline a)
+pNewline :: Format f => P.Parser (Doc (f Inline))
 pNewline = do
   P.char '\n'
   P.skipWhile (/= ' ')
   mbc <- P.peekChar
   if mbc == Just '\n' || mbc == Nothing
      then fail "blankline"
-     else return (lit " ")
+     else return (text " ")
 
-pPara :: (Format a, ToPara a) => P.Parser (Doc Block a)
+pPara :: (Foldable f, Format f, ToPara f) => P.Parser (Doc (f Block))
 pPara = para . mconcat <$> P.many1 pInline <* P.skipSpace
 

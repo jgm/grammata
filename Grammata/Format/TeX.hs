@@ -2,27 +2,37 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveTraversable #-}
 
 module Grammata.Format.TeX (TeX) where
 
+import Data.Foldable
+import Data.Traversable
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Monoid ((<>))
+import Data.Data
+import Data.Typeable
 import Grammata.Types
 
-data TeX
+newtype TeX c = TeX Text
+  deriving (Read, Show, Eq, Ord, Monoid, Data, Typeable, Functor, Foldable, Traversable)
 
 instance Format TeX where
-  lit t = Doc mempty (escapeTeX t)
+  text = return . escapeTeX
+  toText (TeX x) = x
 
 instance ToEmph TeX where
-  emph (Doc v t) = Doc v ("{\\em " <> t <> "}")
+  emph = fmap (\t -> TeX "{\\em " <> t <> TeX "}")
 
 instance ToPara TeX where
-  para (Doc v t) = Doc v t
+  para x = do (TeX t) <- x
+              return (TeX t)
 
-escapeTeX :: Text -> Text
-escapeTeX = T.concatMap escapeTeXChar
+escapeTeX :: Text -> TeX Inline
+escapeTeX = TeX . T.concatMap escapeTeXChar
 
 -- TODO incomplete
 escapeTeXChar :: Char -> Text

@@ -3,6 +3,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE RankNTypes #-}
 
 module Grammata.Types where
@@ -15,62 +16,69 @@ import Data.Typeable
 import Data.Monoid ((<>))
 import Data.Map as M
 import qualified Data.Attoparsec.Text as P
+import Control.Monad.RWS
 
--- | Contexts
-data Inline
 data Block
+data Inline
 
--- | A document or document-part.
--- @c@ is a phantom type to track the context.
--- @f@ is a phantom type to track the format.
-data Doc c f = Doc { variables :: M.Map Text Text
-                   , body      :: Text
-                   }
- deriving (Show, Read, Eq, Ord, Data, Typeable)
+data DocState = DocState {
+    vars :: M.Map Text Text
+} deriving (Read, Show, Eq, Ord, Data, Typeable)
 
-instance Monoid (Doc Inline f) where
-  mappend (Doc v1 t1) (Doc v2 t2) = Doc (v1 <> v2) (t1 <> t2)
-  mempty = Doc mempty mempty
+type Doc = RWS DocState () DocState
 
-instance Monoid (Doc Block f) where
-  mappend (Doc v1 t1) (Doc v2 t2) = Doc (v1 <> v2) (t1 <> "\n\n" <> t2)
-  mempty = Doc mempty mempty
+runDoc :: Doc f -> (f, DocState)
+runDoc doc =
+  let (_, s, _)   = runRWS doc (DocState mempty) (DocState mempty)
+      (res, s', _) = runRWS doc (DocState mempty) s
+  in  (res, s')
 
-class Format a where
-  lit :: Text -> Doc Inline a
+render :: Doc f -> f
+render = fst . runDoc
 
-instance Format f => IsString (Doc Inline f) where
-  fromString = lit . fromString
+instance Show f => Show (Doc f) where
+  show x = "<" ++ show res ++ ", " ++ show s ++ ">"
+      where (res, s) = runDoc x
+
+instance Monoid a => Monoid (Doc a) where
+  mempty = return mempty
+  mappend x y = do{ xres <- x; yres <- y; return (xres <> yres) }
+
+class Format f where
+  text   :: Text -> Doc (f Inline)
+  toText :: f c -> Text
+
+instance Format f => IsString (Doc (f Inline)) where
+  fromString = text . fromString
 
 -- Inlines
 
-class ToEmph a where
-  emph :: Doc Inline a -> Doc Inline a
+class ToEmph f where
+  emph :: Doc (f Inline) -> Doc (f Inline)
 
-class ToStrong a where
-  strong :: Doc Inline a -> Doc Inline a
+class ToStrong f where
+  strong :: Doc (f Inline) -> Doc (f Inline)
 
 data LinkData = LinkData { uri :: Text, title :: Text }
 
-class ToLink a where
-  link :: LinkData -> Doc Inline a -> Doc Inline a
+class ToLink f where
+  link :: LinkData -> Doc (f Inline) -> Doc (f Inline)
 
 -- Blocks
 
-class ToPara a where
-  para :: Doc Inline a -> Doc Block a
+class ToPara f where
+  para :: Doc (f Inline) -> Doc (f Block)
 
-class ToBlockQuote a where
-  blockQuote :: Doc Block a -> Doc Block a
+class ToBlockQuote f where
+  blockQuote :: Doc (f Block) -> Doc (f Block)
 
 data ListType =
     BulletList
   | OrderedList { start :: Int }
   deriving (Show, Read, Eq, Ord)
 
-class ToList a where
-  list :: ListType -> [Doc Block a] -> Doc Block a
+class ToList f where
+  list :: ListType -> [Doc (f Block)] -> Doc (f Block)
 
-class ToHeading a where
-  heading :: Int -> Doc Inline a -> Doc Block a
-
+class ToHeading f where
+  heading :: Int -> Doc (f Inline) -> Doc (f Block)

@@ -2,34 +2,45 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveTraversable #-}
 
 module Grammata.Format.Html (Html) where
 
+import Data.Foldable
+import Data.Traversable
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Monoid ((<>))
+import Data.Data
+import Data.Typeable
 import Grammata.Types
 
-data Html
+newtype Html c = Html Text
+  deriving (Read, Show, Eq, Ord, Monoid, Data, Typeable, Functor, Foldable, Traversable)
 
 instance Format Html where
-  lit = Doc mempty . escapeHtml
+  text = return . escapeHtml
+  toText (Html x) = x
 
 instance ToEmph Html where
-  emph (Doc v t) = Doc v (inTag "em" t)
+  emph = fmap (inTag "em")
 
 instance ToPara Html where
-  para (Doc v t) = Doc v (inTag "p" t)
+  para = fmap (inTag "p")
 
 instance ToHeading Html where
-  heading lev (Doc v t) = Doc v (inTag ("h" <> T.pack (show lev)) t)
+  heading lev = fmap (inTag ("h" <> T.pack (show lev)))
+
 
 -- utility functions
-inTag :: Text -> Text -> Text
-inTag tag t = "<" <> tag <> ">" <> t <> "</" <> tag <> ">"
+inTag :: Text -> Html c -> Html d
+inTag tag (Html t) =
+  Html ("<" <> tag <> ">") <> Html t <> Html ("</" <> tag <> ">")
 
-escapeHtml :: Text -> Text
-escapeHtml = T.concatMap escapeHtmlChar
+escapeHtml :: Text -> Html Inline
+escapeHtml = Html . T.concatMap escapeHtmlChar
 
 escapeHtmlChar :: Char -> Text
 escapeHtmlChar '<' = "&lt;"
@@ -37,4 +48,3 @@ escapeHtmlChar '>' = "&gt;"
 escapeHtmlChar '&' = "&amp;"
 escapeHtmlChar '"' = "&quot;"
 escapeHtmlChar c   = T.singleton c
-
