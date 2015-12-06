@@ -68,3 +68,12 @@ foo x = do mbname <- lookupValueName x
 --   now use th splices to apply the associated function to the args
 
 -- similarly parseBlock
+--
+-- SUPER-EASY way to get the type, now that we're monomorphic!
+--
+-- *Main Data.Typeable> typeOf $(varE (mkName "emph"))
+-- RWST DocState () DocState Identity Inline -> RWST DocState () DocState Identity Inline
+-- import Data.List.Split
+--  splitOn " -> " $ show (typeOf $(varE (mkName "emph")))
+--  ["RWST DocState () DocState Identity Inline","RWST DocState () DocState Identity Inline"]
+
