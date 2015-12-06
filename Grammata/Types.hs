@@ -59,6 +59,11 @@ instance Monoid a => Monoid (Doc a) where
   mempty = return mempty
   mappend x y = do{ xres <- x; yres <- y; return (xres <> yres) }
 
+newtype HeadingLevel = HeadingLevel { unHeadingLevel :: String }
+
+instance IsString HeadingLevel where
+  fromString x = HeadingLevel x
+
 {-
 -- Inlines
 

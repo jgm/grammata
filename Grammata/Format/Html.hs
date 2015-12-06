@@ -16,8 +16,8 @@ emph = fmap (Inline . inTag "em" . toText)
 para :: Doc Inline -> Doc Block
 para = fmap (Block . inTag "p" . toText)
 
-heading :: String -> Doc Inline -> Doc Block
-heading lev = fmap (Block . inTag ("h" <> T.pack lev) . toText)
+heading :: HeadingLevel -> Doc Inline -> Doc Block
+heading lev = fmap (Block . inTag ("h" <> T.pack (unHeadingLevel lev)) . toText)
 
 -- utility functions
 inTag :: Text -> Text -> Text
