@@ -1,16 +1,10 @@
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 
 module Grammata.Format.Html (lit, emph, para, heading) where
 
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Monoid ((<>))
-import Data.Data
-import Data.Typeable
 import Grammata.Types
 
 lit :: Text -> Doc Inline
