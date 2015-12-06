@@ -7,7 +7,7 @@ module Grammata (
   module Grammata.Types,
   -- module Grammata.Parse,
   module Grammata.Format.Html,
-  module Grammata.Format.TeX
+  -- module Grammata.Format.TeX
   ) where
 
 import Data.Text (Text)
@@ -20,7 +20,7 @@ import Data.Monoid ((<>))
 import Grammata.Types
 -- import Grammata.Parse
 import Grammata.Format.Html
-import Grammata.Format.TeX
+-- import Grammata.Format.TeX
 
 -- example
 mydoc :: Doc (Html Block)

@@ -3,13 +3,9 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveTraversable #-}
 
-module Grammata.Format.Html (Html) where
+module Grammata.Format.Html (lit, emph, para, heading) where
 
-import Data.Foldable
-import Data.Traversable
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Monoid ((<>))
@@ -17,30 +13,24 @@ import Data.Data
 import Data.Typeable
 import Grammata.Types
 
-newtype Html c = Html Text
-  deriving (Read, Show, Eq, Ord, Monoid, Data, Typeable, Functor, Foldable, Traversable)
+lit :: Text -> Doc Inline
+lit = return . escapeHtml
 
-instance Format Html where
-  text = return . escapeHtml
-  toText (Html x) = x
+emph :: Doc Inline -> Doc Inline
+emph = fmap (Inline . inTag "em" . toText)
 
-instance ToEmph Html where
-  emph = fmap (inTag "em")
+para :: Doc Inline -> Doc Block
+para = fmap (Block . inTag "p" . toText)
 
-instance ToPara Html where
-  para = fmap (inTag "p")
-
-instance ToHeading Html where
-  heading lev = fmap (inTag ("h" <> T.pack (show lev)))
-
+heading :: Int -> Doc Inline -> Doc Block
+heading lev = fmap (Block . inTag ("h" <> T.pack (show lev)) . toText)
 
 -- utility functions
-inTag :: Text -> Html c -> Html d
-inTag tag (Html t) =
-  Html ("<" <> tag <> ">") <> Html t <> Html ("</" <> tag <> ">")
+inTag :: Text -> Text -> Text
+inTag tag t = "<" <> tag <> ">" <> t <> "</" <> tag <> ">"
 
-escapeHtml :: Text -> Html Inline
-escapeHtml = Html . T.concatMap escapeHtmlChar
+escapeHtml :: Text -> Inline
+escapeHtml = Inline . T.concatMap escapeHtmlChar
 
 escapeHtmlChar :: Char -> Text
 escapeHtmlChar '<' = "&lt;"

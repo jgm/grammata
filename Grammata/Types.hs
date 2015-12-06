@@ -18,8 +18,20 @@ import Data.Map as M
 import qualified Data.Attoparsec.Text as P
 import Control.Monad.RWS
 
-data Block
-data Inline
+newtype Block = Block Text
+  deriving (Read, Show, Eq, Ord, Monoid, Data, Typeable)
+
+newtype Inline = Inline Text
+  deriving (Read, Show, Eq, Ord, Monoid, Data, Typeable)
+
+class Renderable a where
+  toText :: a -> Text
+
+instance Renderable Inline where
+  toText (Inline t) = t
+
+instance Renderable Block where
+  toText (Block t) = t
 
 data DocState = DocState {
     vars :: M.Map Text Text
@@ -27,20 +39,19 @@ data DocState = DocState {
 
 type Doc = RWS DocState () DocState
 
-runDoc :: Doc f -> (f, DocState)
+runDoc :: Doc a -> (a, DocState)
 runDoc doc =
   let (_, s, _)   = runRWS doc (DocState mempty) (DocState mempty)
       (res, s', _) = runRWS doc (DocState mempty) s
   in  (res, s')
 
-class Format f where
-  text   :: Text -> Doc (f Inline)
-  toText :: f c -> Text
+instance IsString (Doc Inline) where
+  fromString = return . Inline . fromString
 
-render :: Format f => Doc (f c) -> Text
+render :: Renderable a => Doc a -> Text
 render = toText . fst . runDoc
 
-instance Show f => Show (Doc f) where
+instance Show a => Show (Doc a) where
   show x = "<" ++ show res ++ ", " ++ show s ++ ">"
       where (res, s) = runDoc x
 
@@ -48,9 +59,7 @@ instance Monoid a => Monoid (Doc a) where
   mempty = return mempty
   mappend x y = do{ xres <- x; yres <- y; return (xres <> yres) }
 
-instance Format f => IsString (Doc (f Inline)) where
-  fromString = text . fromString
-
+{-
 -- Inlines
 
 class ToEmph f where
@@ -82,3 +91,4 @@ class ToList f where
 
 class ToHeading f where
   heading :: Int -> Doc (f Inline) -> Doc (f Block)
+-}
