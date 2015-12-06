@@ -1,45 +1,39 @@
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveTraversable #-}
 
-module Grammata.Format.TeX (TeX) where
+module Grammata.Format.TeX (lit, today, emph, para, heading, doc) where
 
-import Data.Foldable
-import Data.Traversable
-import Data.Text (Text)
-import qualified Data.Text as T
-import Data.Monoid ((<>))
-import Data.Data
-import Data.Typeable
 import Grammata.Types
+import Control.Monad.RWS
+import Data.Time
+import Data.ByteString.Builder (Builder, stringUtf8, charUtf8)
 
-newtype TeX c = TeX Text
-  deriving (Read, Show, Eq, Ord, Monoid, Data, Typeable, Functor, Foldable, Traversable)
+lit :: Monad m => String -> Doc m Inline
+lit = return . escapeTeX
 
-instance Format TeX where
-  text = return . escapeTeX
-  toText (TeX x) = x
+today :: Doc IO Inline
+today = escapeTeX . show <$> liftIO (utctDay <$> getCurrentTime)
 
-instance ToEmph TeX where
-  emph = fmap (\t -> TeX "{\\em " <> t <> TeX "}")
+emph :: Monad m => Doc m Inline -> Doc m Inline
+emph t = "{\\it " <> t <> "}"
 
-instance ToPara TeX where
-  para x = do (TeX t) <- x
-              return (TeX (t <> "\n\n"))
+para :: Monad m => Doc m Inline -> Doc m Block
+para = fmap (Block . (<> "\n") . unInline)
 
-escapeTeX :: Text -> TeX Inline
-escapeTeX = TeX . T.concatMap escapeTeXChar
+heading :: Monad m => HeaderLevel -> Doc m Inline -> Doc m Block
+heading _lev = fmap (Block . (\t -> "\\beginsection " <> t <> "\n") . unInline)
+
+doc :: Monad m => Doc m Block -> Doc m Block
+doc d = d <> para "\\bye"
+
+escapeTeX :: String -> Inline
+escapeTeX = Inline . mconcat . map escapeTeXChar
 
 -- TODO incomplete
-escapeTeXChar :: Char -> Text
-escapeTeXChar '\\' = "\\\\"
-escapeTeXChar '{'  = "\\{"
-escapeTeXChar '}'  = "\\}"
-escapeTeXChar '%'  = "\\%"
-escapeTeXChar '$'  = "\\$"
-escapeTeXChar c    = T.singleton c
+escapeTeXChar :: Char -> Builder
+escapeTeXChar '\\' = stringUtf8 "\\\\"
+escapeTeXChar '{'  = stringUtf8 "\\{"
+escapeTeXChar '}'  = stringUtf8 "\\}"
+escapeTeXChar '%'  = stringUtf8 "\\%"
+escapeTeXChar '$'  = stringUtf8 "\\$"
+escapeTeXChar c    = charUtf8 c
 

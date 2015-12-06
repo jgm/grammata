@@ -4,7 +4,7 @@ import Language.Haskell.TH.Quote -- gives us QuasiQuoter
 import Language.Haskell.TH       -- gives us stuff to return 'Q Exp's.
                                  -- ie. stringL, litE
 
-import Grammata
+import Grammata.Format.Html
 
 fibs :: [Integer]
 fibs = 0 : 1 : zipWith (+) fibs (tail fibs)
@@ -27,6 +27,10 @@ emphQ = varE (mkName "emph")
 -- display with $(stringE =<< foo "emph")
 -- *Main> $(stringE =<< foo "emph")
 -- "ClassOpI Grammata.Types.emph (ForallT [KindedTV f_1627440712 (AppT (AppT ArrowT StarT) StarT)] [AppT (ConT Grammata.Types.ToEmph) (VarT f_1627440712)] (AppT (AppT ArrowT (AppT (ConT Grammata.Types.Doc) (AppT (VarT f_1627440712) (ConT Grammata.Types.Inline)))) (AppT (ConT Grammata.Types.Doc) (AppT (VarT f_1627440712) (ConT Grammata.Types.Inline))))) Grammata.Types.ToEmph (Fixity 9 InfixL)"
+
+-- in simple branch:
+-- *Main Grammata.Format.Html> $(stringE =<< foo "emph")
+-- "VarI Grammata.Format.Html.emph (AppT (AppT ArrowT (AppT (ConT Grammata.Types.Doc) (ConT Grammata.Types.Inline))) (AppT (ConT Grammata.Types.Doc) (ConT Grammata.Types.Inline))) Nothing (Fixity 9 InfixL)"
 
 foo :: String -> Q String
 foo x = do mbname <- lookupValueName x
@@ -64,3 +68,12 @@ foo x = do mbname <- lookupValueName x
 --   now use th splices to apply the associated function to the args
 
 -- similarly parseBlock
+--
+-- SUPER-EASY way to get the type, now that we're monomorphic!
+--
+-- *Main Data.Typeable> typeOf $(varE (mkName "emph"))
+-- RWST DocState () DocState Identity Inline -> RWST DocState () DocState Identity Inline
+-- import Data.List.Split
+--  splitOn " -> " $ show (typeOf $(varE (mkName "emph")))
+--  ["RWST DocState () DocState Identity Inline","RWST DocState () DocState Identity Inline"]
+

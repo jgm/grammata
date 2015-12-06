@@ -1,50 +1,41 @@
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveTraversable #-}
 
-module Grammata.Format.Html (Html) where
+module Grammata.Format.Html (lit, emph, para, heading, today, doc) where
 
-import Data.Foldable
-import Data.Traversable
-import Data.Text (Text)
-import qualified Data.Text as T
-import Data.Monoid ((<>))
-import Data.Data
-import Data.Typeable
 import Grammata.Types
+import Control.Monad.RWS
+import Data.Time
+import Data.ByteString.Builder (Builder, charUtf8, stringUtf8)
 
-newtype Html c = Html Text
-  deriving (Read, Show, Eq, Ord, Monoid, Data, Typeable, Functor, Foldable, Traversable)
+lit :: Monad m => String -> Doc m Inline
+lit = return . escapeHtml
 
-instance Format Html where
-  text = return . escapeHtml
-  toText (Html x) = x
+emph :: Monad m => Doc m Inline -> Doc m Inline
+emph = fmap (Inline . inTag "em" . unInline)
 
-instance ToEmph Html where
-  emph = fmap (inTag "em")
+para :: Monad m => Doc m Inline -> Doc m Block
+para = fmap (Block . inTag "p" . unInline)
 
-instance ToPara Html where
-  para = fmap (inTag "p")
+heading :: Monad m => HeaderLevel -> Doc m Inline -> Doc m Block
+heading (HeaderLevel lev) ils = fmap (Block . inTag ("h" <> lev) . unInline) ils
 
-instance ToHeading Html where
-  heading lev = fmap (inTag ("h" <> T.pack (show lev)))
+today :: Doc IO Inline
+today = escapeHtml . show <$> liftIO (utctDay <$> getCurrentTime)
 
+doc :: Monad m => Doc m Block -> Doc m Block
+doc = id
 
 -- utility functions
-inTag :: Text -> Html c -> Html d
-inTag tag (Html t) =
-  Html ("<" <> tag <> ">") <> Html t <> Html ("</" <> tag <> ">")
+inTag :: String -> Builder -> Builder
+inTag tag b = charUtf8 '<' <> stringUtf8 tag <> charUtf8 '>' <> b <>
+  stringUtf8 "</" <> stringUtf8 tag <> charUtf8 '>'
 
-escapeHtml :: Text -> Html Inline
-escapeHtml = Html . T.concatMap escapeHtmlChar
+escapeHtml :: String -> Inline
+escapeHtml = Inline . mconcat . map escapeHtmlChar
 
-escapeHtmlChar :: Char -> Text
-escapeHtmlChar '<' = "&lt;"
-escapeHtmlChar '>' = "&gt;"
-escapeHtmlChar '&' = "&amp;"
-escapeHtmlChar '"' = "&quot;"
-escapeHtmlChar c   = T.singleton c
+escapeHtmlChar :: Char -> Builder
+escapeHtmlChar '<' = stringUtf8 "&lt;"
+escapeHtmlChar '>' = stringUtf8 "&gt;"
+escapeHtmlChar '&' = stringUtf8 "&amp;"
+escapeHtmlChar '"' = stringUtf8 "&quot;"
+escapeHtmlChar c   = charUtf8 c
