@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Grammata.Parse where
+module Grammata.Parse (parse) where
 
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -14,13 +14,33 @@ import Data.Map as M
 import qualified Data.Attoparsec.Text as P
 import Grammata.Types
 import Control.Applicative
+import Data.Char
 
 type Parser = P.Parser
 
-controlSeq :: Text -> Parser ()
-controlSeq name = P.char '\\' *> P.string name *> P.skipSpace
+controlSeq :: Parser Text
+controlSeq = P.char '\\' *> P.takeWhile1 isAlphaNum <* P.skipSpace
 
+braced :: Parser Text
+braced = do
+  P.char '{'
+  contents <- many (command <|> regular)
+  P.char '}'
+  return $ " (" <> (T.intercalate " <> " contents) <> ") "
 
+command :: Parser Text
+command = do
+  cs <- controlSeq
+  args <- many braced
+  return $ cs <> mconcat args
+
+regular :: Parser Text
+regular = (T.pack . show) <$> P.takeWhile1 (P.notInClass "\\{}")
+
+parse :: Text -> Either String Text
+parse = P.parseOnly (T.intercalate " <> " <$> many (P.skipWhile isSpace >> command))
+
+{-
 pInline :: Format f => P.Parser (Doc (f Inline))
 pInline = pText <|> pNewline
 
@@ -47,3 +67,4 @@ pBlock = pPara
 
 pPara :: (Monoid (f Inline), Format f, ToPara f) => P.Parser (Doc (f Block))
 pPara = para . mconcat <$> P.many1 pInline <* P.skipSpace
+-}

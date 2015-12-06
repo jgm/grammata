@@ -5,7 +5,7 @@
 
 module Grammata (
   module Grammata.Types,
-  -- module Grammata.Parse,
+  module Grammata.Parse,
   ) where
 
 import Data.Text (Text)
@@ -16,7 +16,7 @@ import Data.Typeable
 import Data.Monoid ((<>))
 
 import Grammata.Types
--- import Grammata.Parse
+import Grammata.Parse
 
 {-
 -- example

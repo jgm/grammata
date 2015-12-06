@@ -1,4 +1,5 @@
-This is a paragraph with
-some \emph{emphasized text}.
+\para{This is a paragraph with
+some \emph{emphasized text}.}
+\para{\reverse{hello}}
 
-This is another paragraph.
+\para{This is another paragraph.}
