@@ -1,5 +1,5 @@
 \para{This is a paragraph with
 some \emph{emphasized text}.}
-\para{\reverse{hello}}
+\para{\emph{hello}}
 
 \para{This is another paragraph.}
