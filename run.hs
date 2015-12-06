@@ -2,6 +2,7 @@ import Control.Monad
 import Language.Haskell.Interpreter -- hint
 import Grammata
 import qualified Data.Text.IO as T
+import Data.List (isPrefixOf)
 import Data.Text (Text)
 import qualified Data.Text as T
 import System.Environment
@@ -19,12 +20,19 @@ main = do
 
   r <- runInterpreter (interpretDoc doc format)
   case r of
+       Left (WontCompile es) -> mapM_ (putStrLn . showCompileError file) es
        Left err -> putStrLn (show err)
-       Right () -> return ()
+       Right r -> liftIO . T.putStrLn . render $ r
 
-interpretDoc :: String -> String -> Interpreter ()
+showCompileError file e =
+  if "<interactive>" `isPrefixOf` e'
+     then file ++ drop 13 e'
+     else e'
+  where e' = errMsg e
+
+interpretDoc :: String -> String -> Interpreter (Doc Block)
 interpretDoc doc format = do
   loadModules ["Grammata.hs", "Grammata/Format/" ++ format ++ ".hs"]
   set [languageExtensions := [OverloadedStrings, TemplateHaskell]]
   setImportsQ [("Prelude", Nothing), ("Data.Monoid", Nothing), ("Control.Monad.RWS", Nothing), ("Control.Monad.Identity", Nothing), ("Grammata", Nothing), ("Grammata.Format." ++ format, Nothing), ("Data.String", Nothing), ("Language.Haskell.TH", Nothing)]
-  liftIO . T.putStrLn . render =<< interpret doc (as :: Doc Block)
+  interpret doc (as :: Doc Block)
