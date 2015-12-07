@@ -57,10 +57,7 @@ instance Show a => Show (Doc a) where
 
 instance Monoid a => Monoid (Doc a) where
   mempty = return mempty
-  mappend x y = do
-    xres <- x
-    yres <- y
-    return (xres <> yres)
+  mappend = liftM2 mappend
 
 instance Monoid Block where
   mempty = mempty
@@ -73,37 +70,3 @@ newtype HeadingLevel = HeadingLevel { unHeadingLevel :: String }
 instance IsString HeadingLevel where
   fromString = HeadingLevel
 
-
-{-
--- Inlines
-
-class ToEmph f where
-  emph :: Doc (f Inline) -> Doc (f Inline)
-
-class ToStrong f where
-  strong :: Doc (f Inline) -> Doc (f Inline)
-
-data LinkData = LinkData { uri :: Text, title :: Text }
-
-class ToLink f where
-  link :: LinkData -> Doc (f Inline) -> Doc (f Inline)
-
--- Blocks
-
-class ToPara f where
-  para :: Doc (f Inline) -> Doc (f Block)
-
-class ToBlockQuote f where
-  blockQuote :: Doc (f Block) -> Doc (f Block)
-
-data ListType =
-    BulletList
-  | OrderedList { start :: Int }
-  deriving (Show, Read, Eq, Ord)
-
-class ToList f where
-  list :: ListType -> [Doc (f Block)] -> Doc (f Block)
-
-class ToHeading f where
-  heading :: Int -> Doc (f Inline) -> Doc (f Block)
--}
