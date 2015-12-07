@@ -19,7 +19,7 @@ import qualified Data.Attoparsec.Text as P
 import Control.Monad.RWS
 
 newtype Block = Block Text
-  deriving (Read, Show, Eq, Ord, Monoid, Data, Typeable)
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 newtype Inline = Inline Text
   deriving (Read, Show, Eq, Ord, Monoid, Data, Typeable)
@@ -55,22 +55,24 @@ instance Show a => Show (Doc a) where
   show x = "<" ++ show res ++ ", " ++ show s ++ ">"
       where (res, s) = runDoc x
 
-instance Monoid (Doc Inline) where
+instance Monoid a => Monoid (Doc a) where
   mempty = return mempty
-  mappend x y = do{ xres <- x; yres <- y; return (xres <> yres) }
+  mappend x y = do
+    xres <- x
+    yres <- y
+    return (xres <> yres)
 
-instance Monoid (Doc Block) where
-  mempty = return mempty
-  mappend x y = do Block xres <- x
-                   let endsInNewline = T.null xres || T.last xres == '\n'
-                   Block yres <- y
-                   return $ Block
-                     (xres <> if endsInNewline then yres else ("\n" <> yres))
+instance Monoid Block where
+  mempty = mempty
+  mappend (Block x) (Block y) =
+    let endsInNewline = T.null x || T.last x == '\n'
+    in  Block (x <> if endsInNewline then y else ("\n" <> y))
 
 newtype HeadingLevel = HeadingLevel { unHeadingLevel :: String }
 
 instance IsString HeadingLevel where
-  fromString x = HeadingLevel x
+  fromString = HeadingLevel
+
 
 {-
 -- Inlines
