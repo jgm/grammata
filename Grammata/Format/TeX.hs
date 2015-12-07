@@ -16,7 +16,7 @@ emph t = "{\\em " <> t <> "}"
 para :: Doc Inline -> Doc Block
 para = fmap (Block . (<> "\n\n") . toText)
 
-heading :: Int -> Doc Inline -> Doc Block
+heading :: HeadingLevel -> Doc Inline -> Doc Block
 heading lev = fmap (Block . toText)
 
 escapeTeX :: Text -> Inline

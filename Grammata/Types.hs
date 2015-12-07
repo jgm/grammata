@@ -55,9 +55,17 @@ instance Show a => Show (Doc a) where
   show x = "<" ++ show res ++ ", " ++ show s ++ ">"
       where (res, s) = runDoc x
 
-instance Monoid a => Monoid (Doc a) where
+instance Monoid (Doc Inline) where
   mempty = return mempty
   mappend x y = do{ xres <- x; yres <- y; return (xres <> yres) }
+
+instance Monoid (Doc Block) where
+  mempty = return mempty
+  mappend x y = do Block xres <- x
+                   let endsInNewline = T.null xres || T.last xres == '\n'
+                   Block yres <- y
+                   return $ Block
+                     (xres <> if endsInNewline then yres else ("\n" <> yres))
 
 newtype HeadingLevel = HeadingLevel { unHeadingLevel :: String }
 
