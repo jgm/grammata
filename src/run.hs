@@ -21,7 +21,7 @@ main = do
   case r of
        Left (WontCompile es) -> mapM_ (putStrLn . showCompileError file) es
        Left err -> putStrLn (show err)
-       Right x -> liftIO . T.putStrLn . render $ x
+       Right x -> liftIO . T.putStrLn =<< render x
 
 showCompileError :: [Char] -> GhcError -> [Char]
 showCompileError file e =
