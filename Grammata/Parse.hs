@@ -6,13 +6,8 @@ module Grammata.Parse (parse) where
 
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.String
-import Data.Data
-import Data.Typeable
 import Data.Monoid ((<>))
-import Data.Map as M
 import qualified Data.Attoparsec.Text as P
-import Grammata.Types
 import Control.Applicative
 import Data.Char
 

@@ -1,0 +1,55 @@
+Name:                grammata
+Version:             0.1
+Cabal-Version:       >= 1.10
+Build-type:          Simple
+Synopsis:            Flexible document generation.
+Description:         TBD
+Category:            Text
+Stability:           Experimental
+License:             BSD2
+License-File:        LICENSE
+Author:              John MacFarlane
+Maintainer:          jgm@berkeley.edu
+Homepage:            http://github.com/jgm/grammata
+Extra-source-files:  README.md
+
+Source-repository head
+  type:              git
+  location:          git://github.com/jgm/grammata.git
+
+Flag executable
+  description:       Compile executable.
+  default:           True
+
+Library
+    Build-depends:       base >= 4.5 && < 5, containers, text,
+                         attoparsec, mtl
+    Exposed-modules:     Grammata
+                         Grammata.Parse
+                         Grammata.Types
+                         Grammata.Format.Html
+                         Grammata.Format.TeX
+    if impl(ghc >= 6.12)
+      Ghc-Options:     -Wall -fno-warn-unused-do-bind
+    else
+      Ghc-Options:     -Wall
+    Ghc-Prof-Options:  -auto-all -caf-all
+    Default-Language:    Haskell2010
+    Hs-Source-Dirs:    .
+
+Executable grammata
+    Default-Language:    Haskell2010
+    Main-is:             run.hs
+    Hs-Source-Dirs:      src
+    if impl(ghc >= 6.12)
+      Ghc-Options:     -Wall -fno-warn-unused-do-bind
+    else
+      Ghc-Options:     -Wall
+    Ghc-Prof-Options:  -auto-all -caf-all
+    if flag(executable)
+      Buildable:         True
+      Build-Depends:     base >= 4.5 && < 5, grammata, parsec,
+                         template-haskell, split, text, hint
+    else
+      Buildable:         False
+

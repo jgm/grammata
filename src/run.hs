@@ -1,23 +1,19 @@
-import Control.Monad
 import Language.Haskell.Interpreter -- hint
 import Data.String
 import Grammata.Types
 import qualified Data.Text.IO as T
 import Data.List (isPrefixOf)
-import Data.Text (Text)
-import qualified Data.Text as T
 import System.Environment
-import Data.Either
 import Data.List.Split
 import Text.Parsec
 
 main :: IO ()
 main = do
   args <- getArgs
-  name <- getProgName
+  progname <- getProgName
   let (format,file) = case args of
-                          [x,y] -> (x,y)
-                          _ -> error $ "Usage:  " ++ name ++ " [TeX|Html] file"
+                       [x,y] -> (x,y)
+                       _ -> error $ "Usage:  " ++ progname ++ " [TeX|Html] file"
 
   doc <- readFile file
 
@@ -25,8 +21,9 @@ main = do
   case r of
        Left (WontCompile es) -> mapM_ (putStrLn . showCompileError file) es
        Left err -> putStrLn (show err)
-       Right r -> liftIO . T.putStrLn . render $ r
+       Right x -> liftIO . T.putStrLn . render $ x
 
+showCompileError :: [Char] -> GhcError -> [Char]
 showCompileError file e =
   if "<interactive>" `isPrefixOf` e'
      then file ++ drop 13 e'
