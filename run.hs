@@ -1,6 +1,7 @@
 import Control.Monad
 import Language.Haskell.Interpreter -- hint
-import Grammata
+import Data.String
+import Grammata.Types
 import qualified Data.Text.IO as T
 import Data.List (isPrefixOf)
 import Data.Text (Text)
@@ -8,6 +9,7 @@ import qualified Data.Text as T
 import System.Environment
 import Data.Either
 import Data.List.Split
+import Text.Parsec
 
 main :: IO ()
 main = do
@@ -17,7 +19,7 @@ main = do
                           [x,y] -> (x,y)
                           _ -> error $ "Usage:  " ++ name ++ " [TeX|Html] file"
 
-  doc <- fmap (either error T.unpack) (parse <$> T.readFile file)
+  doc <- readFile file
 
   r <- runInterpreter (interpretDoc doc format)
   case r of
@@ -37,8 +39,7 @@ interpretDoc doc format = do
   set [languageExtensions := [OverloadedStrings, TemplateHaskell, QuasiQuotes]]
   setImportsQ [("Prelude", Nothing), ("Data.Monoid", Nothing), ("Control.Monad.RWS", Nothing), ("Control.Monad.Identity", Nothing), ("Grammata", Nothing), ("Grammata.Format." ++ format, Nothing), ("Data.String", Nothing), ("Language.Haskell.TH", Nothing), ("Data.Typeable", Nothing)]
   let cmd = "heading"
-  liftIO . print =<< lookupCommand cmd
-  interpret doc (as :: Doc Block)
+  return . return . Block . fromString . show =<< parseDoc doc
 
 lookupCommand :: String -> Interpreter [TypeSpec]
 lookupCommand cmd =
@@ -54,4 +55,20 @@ shortenType s
 
 splitType :: String -> [TypeSpec]
 splitType = splitOn " -> "
+
+type Parser = ParsecT [Char] () Interpreter
+type CommandSpec = (String, [String])
+
+pCommand :: Parser CommandSpec
+pCommand = try $ do
+  char '\\'
+  cmd <- many1 alphaNum
+  typespec <- lift $ lookupCommand cmd
+  return (cmd, typespec)
+
+pTrash :: Parser ()
+pTrash = skipMany (noneOf "\\")
+
+parseDoc :: String -> Interpreter (Either ParseError [CommandSpec])
+parseDoc = runParserT (many $ try $ pTrash >> pCommand) () "input"
 
