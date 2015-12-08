@@ -32,23 +32,29 @@ data DocState = DocState {
     vars :: M.Map Text Text
 } deriving (Read, Show, Eq, Ord, Data, Typeable)
 
-type Doc = RWS DocState () DocState
+defDocState :: DocState
+defDocState = DocState M.empty
 
-runDoc :: Doc a -> (a, DocState)
+data Message = Message Int Int Text
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+type Doc = RWS DocState [Message] DocState
+
+runDoc :: Doc a -> (a, DocState, [Message])
 runDoc doc =
-  let (_, s, _)   = runRWS doc (DocState mempty) (DocState mempty)
-      (res, s', _) = runRWS doc (DocState mempty) s
-  in  (res, s')
+  let (_, s, _)    = runRWS doc defDocState defDocState
+  in  runRWS doc defDocState s
 
 instance IsString (Doc Inline) where
   fromString = return . Inline . fromString
 
 render :: Renderable a => Doc a -> Text
-render = toText . fst . runDoc
+render d = toText x
+  where (x, _, _) = runDoc d
 
 instance Show a => Show (Doc a) where
-  show x = "<" ++ show res ++ ", " ++ show s ++ ">"
-      where (res, s) = runDoc x
+  show x = "<" ++ show res ++ ", " ++ show s ++ ", " ++ show ms ++ ">"
+      where (res, s, ms) = runDoc x
 
 instance Monoid a => Monoid (Doc a) where
   mempty = return mempty

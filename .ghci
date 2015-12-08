@@ -1,3 +1,4 @@
+:set -XFlexibleContexts
 :set -XOverloadedStrings
 :set -XTemplateHaskell
 :set -XScopedTypeVariables
