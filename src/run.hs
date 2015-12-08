@@ -15,9 +15,9 @@ main = do
                        [x,y] -> (x,y)
                        _ -> error $ "Usage:  " ++ progname ++ " [TeX|Html] file"
 
-  doc <- readFile file
+  docu <- readFile file
 
-  r <- runInterpreter (interpretDoc doc format)
+  r <- runInterpreter (interpretDoc docu format)
   case r of
        Left (WontCompile es) -> mapM_ (putStrLn . showCompileError file) es
        Left err -> putStrLn (show err)
@@ -31,12 +31,12 @@ showCompileError file e =
   where e' = errMsg e
 
 interpretDoc :: String -> String -> Interpreter (Doc Block)
-interpretDoc doc format = do
+interpretDoc docu format = do
   loadModules ["Grammata.hs", "Grammata/Format/" ++ format ++ ".hs"]
   set [languageExtensions := [OverloadedStrings, TemplateHaskell, QuasiQuotes]]
   setImportsQ [("Prelude", Nothing), ("Data.Monoid", Nothing), ("Control.Monad.RWS", Nothing), ("Control.Monad.Identity", Nothing), ("Grammata", Nothing), ("Grammata.Format." ++ format, Nothing), ("Data.String", Nothing), ("Language.Haskell.TH", Nothing), ("Data.Typeable", Nothing)]
   let cmd = "heading"
-  return . return . Block . fromString . show =<< parseDoc doc
+  return . doc . Block . fromString . show =<< parseDoc docu
 
 lookupCommand :: String -> Interpreter [TypeSpec]
 lookupCommand cmd =
