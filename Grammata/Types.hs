@@ -52,12 +52,7 @@ instance Show a => Show (Doc a) where
 
 instance Monoid a => Monoid (Doc a) where
   mempty = return mempty
-  mappend d1 d2 = do
-    d1v <- d1
-    d1s <- get
-    put d1s
-    d2v <- d2
-    return $ d1v <> d2v
+  mappend = liftM2 mappend
 
 instance Monoid Block where
   mempty = mempty
