@@ -7,6 +7,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import System.Environment
 import Data.Either
+import Data.List.Split
 
 main :: IO ()
 main = do
@@ -33,6 +34,24 @@ showCompileError file e =
 interpretDoc :: String -> String -> Interpreter (Doc Block)
 interpretDoc doc format = do
   loadModules ["Grammata.hs", "Grammata/Format/" ++ format ++ ".hs"]
-  set [languageExtensions := [OverloadedStrings, TemplateHaskell]]
-  setImportsQ [("Prelude", Nothing), ("Data.Monoid", Nothing), ("Control.Monad.RWS", Nothing), ("Control.Monad.Identity", Nothing), ("Grammata", Nothing), ("Grammata.Format." ++ format, Nothing), ("Data.String", Nothing), ("Language.Haskell.TH", Nothing)]
+  set [languageExtensions := [OverloadedStrings, TemplateHaskell, QuasiQuotes]]
+  setImportsQ [("Prelude", Nothing), ("Data.Monoid", Nothing), ("Control.Monad.RWS", Nothing), ("Control.Monad.Identity", Nothing), ("Grammata", Nothing), ("Grammata.Format." ++ format, Nothing), ("Data.String", Nothing), ("Language.Haskell.TH", Nothing), ("Data.Typeable", Nothing)]
+  let cmd = "heading"
+  liftIO . print =<< lookupCommand cmd
   interpret doc (as :: Doc Block)
+
+lookupCommand :: String -> Interpreter [TypeSpec]
+lookupCommand cmd =
+  map shortenType . splitType <$> interpret ("show $ typeOf $(varE (mkName " ++ show cmd ++ "))") (as :: String)
+
+type TypeSpec = String
+
+shortenType :: String -> String
+shortenType s
+  | "RWST DocState () DocState Identity" `isPrefixOf` s =
+    "Doc " ++ drop 35 s
+  | otherwise = s
+
+splitType :: String -> [TypeSpec]
+splitType = splitOn " -> "
+
