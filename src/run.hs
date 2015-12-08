@@ -30,7 +30,7 @@ showCompileError file e =
      else e'
   where e' = errMsg e
 
-interpretDoc :: String -> String -> Interpreter (Doc Block)
+interpretDoc :: Monad m => String -> String -> Interpreter (Doc m Block)
 interpretDoc doc format = do
   loadModules ["Grammata.hs", "Grammata/Format/" ++ format ++ ".hs"]
   set [languageExtensions := [OverloadedStrings, TemplateHaskell, QuasiQuotes]]
@@ -39,8 +39,11 @@ interpretDoc doc format = do
   return . return . Block . fromString . show =<< parseDoc doc
 
 lookupCommand :: String -> Interpreter [TypeSpec]
+lookupCommand cmd = (:[]) <$> interpret ("$(stringE =<< show <$> reify (mkName " ++ show cmd ++ " ))") (as :: String)
+{-
 lookupCommand cmd =
   map shortenType . splitType <$> interpret ("show $ typeOf $(varE (mkName " ++ show cmd ++ "))") (as :: String)
+-}
 
 type TypeSpec = String
 

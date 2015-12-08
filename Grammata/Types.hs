@@ -38,21 +38,21 @@ defDocState = DocState M.empty
 data Message = Message Int Int Text
   deriving (Read, Show, Eq, Ord, Data, Typeable)
 
-type Doc = RWST DocState [Message] DocState IO
+type Doc = RWST DocState [Message] DocState
 
-runDoc :: Doc a -> IO (a, DocState, [Message])
+runDoc :: Monad m => Doc m a -> m (a, DocState, [Message])
 runDoc doc = do
   (_, s, _) <- runRWST doc defDocState defDocState
   runRWST doc defDocState s
 
-instance IsString (Doc Inline) where
+instance Monad m => IsString (Doc m Inline) where
   fromString = return . Inline . fromString
 
-render :: Renderable a => Doc a -> IO Text
+render :: (Monad m, Renderable a) => Doc m a -> m Text
 render = fmap (toText . getFst) . runDoc
   where getFst (x, _, _) = x
 
-instance Monoid a => Monoid (Doc a) where
+instance (Monad m, Monoid a) => Monoid (Doc m a) where
   mempty = return mempty
   mappend = liftM2 mappend
 

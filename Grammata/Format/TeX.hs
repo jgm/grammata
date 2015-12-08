@@ -7,16 +7,16 @@ import qualified Data.Text as T
 import Data.Monoid ((<>))
 import Grammata.Types
 
-lit :: Text -> Doc Inline
+lit :: Monad m => Text -> Doc m Inline
 lit = return . escapeTeX
 
-emph :: Doc Inline -> Doc Inline
+emph :: Monad m => Doc m Inline -> Doc m Inline
 emph t = "{\\em " <> t <> "}"
 
-para :: Doc Inline -> Doc Block
+para :: Monad m => Doc m Inline -> Doc m Block
 para = fmap (Block . (<> "\n\n") . toText)
 
-heading :: HeadingLevel -> Doc Inline -> Doc Block
+heading :: Monad m => HeadingLevel -> Doc m Inline -> Doc m Block
 heading lev = fmap (Block . toText)
 
 escapeTeX :: Text -> Inline
