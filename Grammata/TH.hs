@@ -2,11 +2,9 @@
 module Grammata.TH (toTypeSpec) where
 
 import Grammata.Types
-import Language.Haskell.TH hiding (Inline)
-import Data.List (isPrefixOf)
-import Data.Data
 import Data.Maybe
-import Debug.Trace
+import Language.Haskell.TH hiding (Inline)
+-- import Debug.Trace
 import Data.Text (Text)
 
 toTypeSpec :: String -> ExpQ
@@ -15,41 +13,37 @@ toTypeSpec cmd = do
   listE $ map stringE $ fromMaybe [] $ extractTypeSpec info
 
 extractTypeSpec :: Info -> Maybe [String]
-extractTypeSpec (VarI _ ty _ _) =
-  case traceShowId ty of
+extractTypeSpec (VarI _ ty _ _) = typeSpecOf ty
+extractTypeSpec _ = Nothing
+
+typeSpecOf :: Type -> Maybe [String]
+typeSpecOf ty =
+  case ty of
+    ConT n1   -> sequence [fromName n1]
     AppT
       (AppT
         (ConT n1)
-        (ConT _))
+        _)
       (ConT n2)
       | n1 == ''Doc -> sequence [fromName n2]
+    AppT
+      (AppT ArrowT x)
+      y -> case (typeSpecOf x, typeSpecOf y) of
+                (Just xt, Just yt) -> Just (xt ++ yt)
+                _                  -> Nothing
     ForallT
       [KindedTV _ (AppT (AppT ArrowT StarT) StarT)]
       [AppT (ConT n0) (VarT _)]
-      (AppT
-        (AppT
-          ArrowT
-          (AppT
-            (AppT
-              (ConT n1)
-              (VarT _))
-            (ConT n2)))
-        (AppT
-          (AppT
-            (ConT n3)
-            (VarT _))
-          (ConT n4)))
-      | n0 == ''Monad && n1 == ''Doc && n3 == ''Doc
-        -> sequence $ map fromName [n2, n4]
+      x | n0 == ''Monad -> typeSpecOf x
     _ -> Nothing
-extractTypeSpec _ = Nothing
 
 fromName :: Name -> Maybe String
 fromName n =
   case n of
-     _ | n == ''Inline -> Just "Inline"
-       | n == ''Block  -> Just "Block"
-       | n == ''Int    -> Just "Int"
-       | n == ''Text   -> Just "Text"
-       | otherwise     -> Nothing
+     _ | n == ''Inline       -> Just "Inline"
+       | n == ''Block        -> Just "Block"
+       | n == ''Int          -> Just "Int"
+       | n == ''Text         -> Just "Text"
+       | n == ''HeadingLevel -> Just "HeadingLevel"
+       | otherwise           -> Just (show n)
 
