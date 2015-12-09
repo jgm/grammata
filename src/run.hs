@@ -1,11 +1,14 @@
+{-# LANGUAGE OverloadedStrings #-}
 import Debug.Trace
 import Language.Haskell.Interpreter -- hint
+import Data.Monoid
 import Data.String
 import Control.Monad
 import Grammata.Types
 import Grammata.TH
 import qualified Data.Text.IO as T
 import qualified Data.Text as T
+import Data.Text (Text)
 import Data.List (isPrefixOf)
 import System.Environment
 import Text.Parsec
@@ -34,7 +37,7 @@ showCompileError file e =
      else e'
   where e' = errMsg e
 
-interpretDoc :: Monad m => String -> String -> Interpreter (Doc m Block)
+interpretDoc :: String -> String -> Interpreter (Doc IO Block)
 interpretDoc doc format = do
   loadModules ["Grammata/Format/" ++ format ++ ".hs", "Grammata/TH.hs"]
   set [languageExtensions := [TemplateHaskell]]
@@ -42,58 +45,80 @@ interpretDoc doc format = do
   res <- parseDoc doc
   case res of
        Left e  -> error (show e)
-       Right r -> return r
+       Right r -> return $ return $ Block r
 
-lookupCommand :: String -> Interpreter [String]
+lookupCommand :: Text -> Interpreter (Maybe (String, [String]))
 lookupCommand cmd = do
-  interpret ("$(toTypeSpec " ++ show cmd ++ ")") (as :: [String])
+  xs <- interpret ("$(toTypeSpec " ++ show cmd ++ ")") (as :: [String])
+  return $
+    if null xs
+       then Nothing
+       else Just (last xs, init xs) -- result, args
 
 type Parser = ParsecT [Char] () Interpreter
 
-pControlSeq :: Parser String
+pControlSeq :: Parser Text
 pControlSeq = try $ do
   char '\\'
   cmd <- many1 alphaNum
   spaces
-  return cmd
+  return $ fromString cmd
 
-pInlineCommand :: Monad m => Parser (Doc m Inline)
+pInlineCommand :: Parser Text
 pInlineCommand = try $ do
   cmd <- pControlSeq
   typespec <- lift $ lookupCommand cmd
-  return $ fromString $ show (cmd, typespec)
+  case typespec of
+       Nothing               -> fail $ "Undefined command " ++ T.unpack cmd
+       Just ("Inline", args) -> ((cmd <> " ") <>) <$> processArgs args
+       Just _                -> fail $ T.unpack cmd ++ " does not return Inline"
 
-pBlockCommand :: Monad m => Parser (Doc m Block)
+pBlockCommand :: Parser Text
 pBlockCommand = try $ do
   cmd <- pControlSeq
   typespec <- lift $ lookupCommand cmd
-  return $ return . Block . T.pack $ show (cmd, typespec)
+  case typespec of
+       Nothing              -> fail $ "Undefined command " ++ T.unpack cmd
+       Just ("Block", args) -> ((cmd <> " ") <>) <$> processArgs args
+       Just _               -> fail $ T.unpack cmd ++ " does not return Block"
 
-pBraced :: (Monad m, Monoid a) => Parser (Doc m a) -> Parser (Doc m a)
+processArgs :: [String] -> Parser Text
+processArgs = fmap mconcat . mapM processArg
+
+processArg :: String -> Parser Text
+processArg "Inline" = pInlineArg
+processArg "Block" = pBlockArg
+processArg x = fail $ "Argument type "  ++ x ++ " unimplemented"
+
+pBraced :: Parser Text -> Parser Text
 pBraced p = do
   char '{'
-  mconcat <$> manyTill p (char '}')
+  (inParens . T.intercalate " <> ") <$> manyTill p (char '}')
 
-pComment :: (Monad m, Monoid a) => Parser (Doc m a)
+inParens :: Text -> Text
+inParens t = "(" <> t <> ")"
+
+pComment :: Parser ()
 pComment = do
   char '%'
   skipMany (noneOf "\n")
   optional (char '\n')
-  return mempty
 
-pSkip :: Monad m => Parser (Doc m Block)
-pSkip = space >> spaces >> return mempty
+pSkip :: Parser ()
+pSkip = space >> spaces
 
-pText :: Monad m => Parser (Doc m Inline)
-pText = fromString <$> many1 (noneOf "\\{}%")
+pText :: Parser Text
+pText = (fromString . show) <$> many1 (noneOf "\\{}%")
 
-pInlineArg :: Monad m => Parser (Doc m Inline)
-pInlineArg = pBraced (pText <|> pInlineCommand <|> pComment)
+pInlineArg :: Parser Text
+pInlineArg = pBraced (try $ skipMany pComment >> (pText <|> pInlineCommand))
 
-pBlockArg :: Monad m => Parser (Doc m Block)
-pBlockArg = pBraced (pBlockCommand <|> pComment <|> (spaces >> return mempty))
+pBlockArg :: Parser Text
+pBlockArg = pBraced (try $ skipMany (pComment <|> pSkip) >> pBlockCommand)
 
-parseDoc :: Monad m => String -> Interpreter (Either ParseError (Doc m Block))
+parseDoc :: String -> Interpreter (Either ParseError Text)
 parseDoc = runParserT
-  (mconcat <$> many (pBlockCommand <|> pComment <|> (anyChar >> return mempty)) <* eof) () "input"
+  (T.intercalate " <> " <$>
+    many (try $ skipMany (pComment <|> pSkip) >> pBlockCommand)
+      <* spaces <* eof) () "input"
 

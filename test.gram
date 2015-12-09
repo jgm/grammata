@@ -1,4 +1,4 @@
-\heading{0}{My heading}
+%\heading{0}{My heading}
 
 \para{This is a paragraph with
 some \emph{emphasized text} \cpuTime.}
