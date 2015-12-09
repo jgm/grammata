@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Grammata.TH (TypeSpec(..), toTypeSpec) where
+module Grammata.TH (toTypeSpec) where
 
 import Grammata.Types
 import Language.Haskell.TH hiding (Inline)
@@ -7,20 +7,16 @@ import Data.List (isPrefixOf)
 import Data.Data
 import Data.Maybe
 import Debug.Trace
-
-data TypeSpec =
-  TyInt | TyText | TyInline | TyBlock
-  deriving (Show, Read, Eq, Ord)
+import Data.Text (Text)
 
 toTypeSpec :: String -> ExpQ
 toTypeSpec cmd = do
   info <- reify (mkName cmd)
-  listE $ map (stringE . show)
-        $ fromMaybe [] $ extractTypeSpec info
+  listE $ map stringE $ fromMaybe [] $ extractTypeSpec info
 
-extractTypeSpec :: Info -> Maybe [TypeSpec]
+extractTypeSpec :: Info -> Maybe [String]
 extractTypeSpec (VarI _ ty _ _) =
-  case ty of
+  case traceShowId ty of
     ForallT
       [KindedTV _ (AppT (AppT ArrowT StarT) StarT)]
       [AppT (ConT n0) (VarT _)]
@@ -42,10 +38,12 @@ extractTypeSpec (VarI _ ty _ _) =
     _ -> Nothing
 extractTypeSpec _ = Nothing
 
-fromName :: Name -> Maybe TypeSpec
+fromName :: Name -> Maybe String
 fromName n =
   case n of
-     _ | n == ''Inline -> Just TyInline
-       | n == ''Block  -> Just TyBlock
+     _ | n == ''Inline -> Just "Inline"
+       | n == ''Block  -> Just "Block"
+       | n == ''Int    -> Just "Int"
+       | n == ''Text   -> Just "Text"
        | otherwise     -> Nothing
 
