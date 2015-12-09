@@ -5,7 +5,6 @@ import Grammata.TH
 import qualified Data.Text.IO as T
 import Data.List (isPrefixOf)
 import System.Environment
-import Data.List.Split
 import Text.Parsec
 
 main :: IO ()
@@ -42,16 +41,7 @@ interpretDoc doc format = do
 
 lookupCommand :: String -> Interpreter [TypeSpec]
 lookupCommand cmd = do
-  interpret ("$(toTypeSpec " ++ show cmd ++ ")") (as :: [String])
-
-shortenType :: String -> String
-shortenType s
-  | "RWST DocState () DocState Identity" `isPrefixOf` s =
-    "Doc " ++ drop 35 s
-  | otherwise = s
-
-splitType :: String -> [TypeSpec]
-splitType = splitOn " -> "
+  interpret ("$(toTypeSpec " ++ show cmd ++ ")") (as :: [TypeSpec])
 
 type Parser = ParsecT [Char] () Interpreter
 type CommandSpec = (String, [String])
@@ -68,4 +58,5 @@ pTrash = skipMany (noneOf "\\")
 
 parseDoc :: String -> Interpreter (Either ParseError [CommandSpec])
 parseDoc = runParserT (many $ try $ pTrash >> pCommand) () "input"
+
 
