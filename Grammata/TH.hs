@@ -9,8 +9,12 @@ import Data.Text (Text)
 
 toTypeSpec :: String -> ExpQ
 toTypeSpec cmd = do
-  info <- reify (mkName cmd)
-  listE $ map stringE $ fromMaybe [] $ extractTypeSpec info
+  mbName <- lookupValueName cmd
+  case mbName of
+       Nothing -> listE []
+       Just name -> do
+         info <- reify name
+         listE $ map stringE $ fromMaybe [] $ extractTypeSpec info
 
 extractTypeSpec :: Info -> Maybe [String]
 extractTypeSpec (VarI _ ty _ _) = typeSpecOf ty

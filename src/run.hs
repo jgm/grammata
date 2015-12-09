@@ -67,7 +67,7 @@ pControlSeq = try $ do
   return $ fromString cmd
 
 pInlineCommand :: Parser Text
-pInlineCommand = try $ do
+pInlineCommand = do
   cmd <- pControlSeq
   typespec <- lift $ lookupCommand cmd
   case typespec of
@@ -76,7 +76,7 @@ pInlineCommand = try $ do
        Just _                -> fail $ T.unpack cmd ++ " does not return Inline"
 
 pBlockCommand :: Parser Text
-pBlockCommand = try $ do
+pBlockCommand = do
   cmd <- pControlSeq
   typespec <- lift $ lookupCommand cmd
   case typespec of
