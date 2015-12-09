@@ -11,6 +11,7 @@ import qualified Data.Text as T
 import Data.Text (Text)
 import Data.List (isPrefixOf)
 import System.Environment
+import System.IO (stderr)
 import Text.Parsec
 
 main :: IO ()
@@ -46,7 +47,7 @@ interpretDoc doc format = do
   case res of
        Left e  -> error (show e)
        Right r -> do
-          liftIO $ T.putStrLn r
+          liftIO $ T.hPutStrLn stderr r
           interpret (T.unpack r) (as :: Doc IO Block)
 
 lookupCommand :: Text -> Interpreter (Maybe (String, [String]))
