@@ -42,8 +42,7 @@ interpretDoc doc format = do
 
 lookupCommand :: String -> Interpreter [TypeSpec]
 lookupCommand cmd = do
-  rawTS <- interpret ("$(listE . map stringE =<< toTypeSpec <$> reify (mkName " ++
-                            show cmd ++ "))") (as :: [String])
+  rawTS <- interpret ("$(toTypeSpec " ++ show cmd ++ ")") (as :: [String])
   return rawTS -- $ toTypeSpec rawTS
 
 {-
