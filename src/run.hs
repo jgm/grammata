@@ -40,12 +40,14 @@ showCompileError file e =
 interpretDoc :: String -> String -> Interpreter (Doc IO Block)
 interpretDoc doc format = do
   loadModules ["Grammata/Format/" ++ format ++ ".hs", "Grammata/TH.hs"]
-  set [languageExtensions := [TemplateHaskell]]
-  setImportsQ [("Prelude", Nothing), ("Grammata.Format." ++ format, Nothing), ("Grammata.TH", Nothing), ("Data.String", Nothing), ("Language.Haskell.TH", Nothing)]
+  set [languageExtensions := [TemplateHaskell, OverloadedStrings]]
+  setImportsQ [("Prelude", Nothing), ("Grammata.Format." ++ format, Nothing), ("Grammata.TH", Nothing), ("Data.String", Nothing), ("Data.Monoid", Nothing), ("Language.Haskell.TH", Nothing), ("Grammata.Types", Nothing), ("Control.Monad.RWS", Nothing)]
   res <- parseDoc doc
   case res of
        Left e  -> error (show e)
-       Right r -> return $ return $ Block r
+       Right r -> do
+          liftIO $ T.putStrLn r
+          interpret (T.unpack r) (as :: Doc IO Block)
 
 lookupCommand :: Text -> Interpreter (Maybe (String, [String]))
 lookupCommand cmd = do
@@ -118,7 +120,7 @@ pBlockArg = pBraced (try $ skipMany (pComment <|> pSkip) >> pBlockCommand)
 
 parseDoc :: String -> Interpreter (Either ParseError Text)
 parseDoc = runParserT
-  (T.intercalate " <> " <$>
+  (T.intercalate "\n<>\n" <$>
     many (try $ skipMany (pComment <|> pSkip) >> pBlockCommand)
       <* spaces <* eof) () "input"
 
