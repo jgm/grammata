@@ -11,21 +11,27 @@ import Data.String
 import Data.Map as M
 import Data.Data
 import Control.Monad.RWS
+import qualified Data.ByteString.Builder as B
+import Data.ByteString.Builder (Builder)
+import Data.ByteString.Lazy as BL
 
-newtype Block = Block Text
-  deriving (Read, Show, Eq, Ord, Data, Typeable)
+newtype Block = Block { unBlock :: Builder }
 
-newtype Inline = Inline Text
-  deriving (Read, Show, Eq, Ord, Monoid, Data, Typeable)
+instance Monoid Block where
+  mempty = Block mempty
+  mappend (Block x) (Block y) = Block (x <> "\n" <> y)
+
+newtype Inline = Inline { unInline :: Builder }
+  deriving Monoid
 
 class Renderable a where
-  toText :: a -> Text
+  toBuilder :: a -> Builder
 
 instance Renderable Inline where
-  toText (Inline t) = t
+  toBuilder (Inline b) = b
 
 instance Renderable Block where
-  toText (Block t) = t
+  toBuilder (Block b) = b
 
 data DocState = DocState {
     vars :: M.Map Text Text
@@ -45,19 +51,15 @@ runDoc doc = do
   runRWST doc defDocState s
 
 instance Monad m => IsString (Doc m Inline) where
-  fromString = return . Inline . fromString
+  fromString = return . Inline . B.stringUtf8
 
-render :: (Monad m, Renderable a) => Doc m a -> m Text
-render = fmap (toText . getFst) . runDoc
+render :: (Monad m, Renderable a) => Doc m a -> m BL.ByteString
+render = fmap (B.toLazyByteString . toBuilder . getFst) . runDoc
   where getFst (x, _, _) = x
 
 instance (Monad m, Monoid a) => Monoid (Doc m a) where
   mempty = return mempty
   mappend = liftM2 mappend
-
-instance Monoid Block where
-  mempty = Block mempty
-  mappend (Block x) (Block y) = Block (x <> "\n" <> y)
 
 newtype HeadingLevel = HeadingLevel { unHeadingLevel :: String }
 

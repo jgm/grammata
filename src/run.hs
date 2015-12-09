@@ -1,11 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
-import Debug.Trace
+-- import Debug.Trace
 import Language.Haskell.Interpreter -- hint
-import Data.Monoid
 import Data.String
-import Control.Monad
+import Data.Monoid
 import Grammata.Types
-import Grammata.TH
 import qualified Data.Text.IO as T
 import qualified Data.Text as T
 import Data.Text (Text)
@@ -13,6 +11,7 @@ import Data.List (isPrefixOf)
 import System.Environment
 import System.IO (stderr)
 import Text.Parsec
+import qualified Data.ByteString.Lazy as BL
 
 main :: IO ()
 main = do
@@ -29,7 +28,9 @@ main = do
   case r of
        Left (WontCompile es) -> mapM_ (putStrLn . showCompileError file) es
        Left err -> putStrLn (show err)
-       Right x -> liftIO . T.putStrLn =<< render x
+       Right x  -> do
+         render x >>= liftIO . BL.putStr
+         liftIO $ BL.putStr "\n"
 
 showCompileError :: [Char] -> GhcError -> [Char]
 showCompileError file e =
@@ -50,7 +51,7 @@ interpretDoc doc format = do
           liftIO $ T.hPutStrLn stderr r
           interpret (T.unpack r) (as :: Doc IO Block)
 
-lookupCommand :: Text -> Interpreter (Maybe (String, [String]))
+lookupCommand :: String -> Interpreter (Maybe (String, [String]))
 lookupCommand cmd = do
   xs <- interpret ("$(toTypeSpec " ++ show cmd ++ ")") (as :: [String])
   return $
@@ -60,30 +61,30 @@ lookupCommand cmd = do
 
 type Parser = ParsecT [Char] () Interpreter
 
-pControlSeq :: Parser Text
+pControlSeq :: Parser String
 pControlSeq = try $ do
   char '\\'
   cmd <- many1 alphaNum
   spaces
-  return $ fromString cmd
+  return cmd
 
 pInlineCommand :: Parser Text
 pInlineCommand = do
   cmd <- pControlSeq
   typespec <- lift $ lookupCommand cmd
   case typespec of
-       Nothing               -> fail $ "Undefined command " ++ T.unpack cmd
-       Just ("Inline", args) -> ((cmd <> " ") <>) <$> processArgs args
-       Just _                -> fail $ T.unpack cmd ++ " does not return Inline"
+       Nothing               -> fail $ "Undefined command " ++ cmd
+       Just ("Inline", args) -> ((T.pack cmd <> " ") <>) <$> processArgs args
+       Just _                -> fail $ cmd ++ " does not return Inline"
 
 pBlockCommand :: Parser Text
 pBlockCommand = do
   cmd <- pControlSeq
   typespec <- lift $ lookupCommand cmd
   case typespec of
-       Nothing              -> fail $ "Undefined command " ++ T.unpack cmd
-       Just ("Block", args) -> ((cmd <> " ") <>) <$> processArgs args
-       Just _               -> fail $ T.unpack cmd ++ " does not return Block"
+       Nothing              -> fail $ "Undefined command " ++ cmd
+       Just ("Block", args) -> ((T.pack cmd <> " ") <>) <$> processArgs args
+       Just _               -> fail $ cmd ++ " does not return Block"
 
 processArgs :: [String] -> Parser Text
 processArgs = fmap mconcat . mapM processArg
