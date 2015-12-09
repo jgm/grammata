@@ -17,6 +17,12 @@ toTypeSpec cmd = do
 extractTypeSpec :: Info -> Maybe [String]
 extractTypeSpec (VarI _ ty _ _) =
   case traceShowId ty of
+    AppT
+      (AppT
+        (ConT n1)
+        (ConT _))
+      (ConT n2)
+      | n1 == ''Doc -> sequence [fromName n2]
     ForallT
       [KindedTV _ (AppT (AppT ArrowT StarT) StarT)]
       [AppT (ConT n0) (VarT _)]
