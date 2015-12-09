@@ -47,14 +47,14 @@ lookupCommand cmd = do
   interpret ("$(toTypeSpec " ++ show cmd ++ ")") (as :: [TypeSpec])
 
 type Parser = ParsecT [Char] () Interpreter
-type CommandSpec = (String, [String])
+type CommandSpec = (String, [TypeSpec])
 
 pCommand :: Parser CommandSpec
 pCommand = try $ do
   char '\\'
   cmd <- many1 alphaNum
   typespec <- lift $ lookupCommand cmd
-  return (cmd, [show typespec])
+  return (cmd, typespec)
 
 pTrash :: Parser ()
 pTrash = skipMany (noneOf "\\")
