@@ -1,10 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Grammata.Format.Html (lit, emph, para, heading) where
+module Grammata.Format.Html (lit, emph, para, heading, cpuTime) where
 
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Monoid ((<>))
 import Grammata.Types
 import Control.Monad.RWS
 import System.CPUTime
