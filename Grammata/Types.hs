@@ -7,7 +7,6 @@
 module Grammata.Types where
 
 import Data.Text (Text)
-import qualified Data.Text as T
 import Data.String
 import Data.Map as M
 import Data.Data
@@ -58,9 +57,7 @@ instance (Monad m, Monoid a) => Monoid (Doc m a) where
 
 instance Monoid Block where
   mempty = Block mempty
-  mappend (Block x) (Block y) =
-    let endsInNewline = T.null x || T.last x == '\n'
-    in  Block (x <> if endsInNewline then y else ("\n" <> y))
+  mappend (Block x) (Block y) = Block (x <> "\n" <> y)
 
 newtype HeadingLevel = HeadingLevel { unHeadingLevel :: String }
 
