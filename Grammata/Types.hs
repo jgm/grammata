@@ -57,7 +57,7 @@ instance (Monad m, Monoid a) => Monoid (Doc m a) where
   mappend = liftM2 mappend
 
 instance Monoid Block where
-  mempty = mempty
+  mempty = Block mempty
   mappend (Block x) (Block y) =
     let endsInNewline = T.null x || T.last x == '\n'
     in  Block (x <> if endsInNewline then y else ("\n" <> y))

@@ -4,12 +4,10 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Grammata (
-  module Grammata.Types,
-  module Grammata.Parse,
+  module Grammata.Types
   ) where
 
 import Grammata.Types
-import Grammata.Parse
 
 {-
 -- example

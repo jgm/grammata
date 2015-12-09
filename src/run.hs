@@ -1,5 +1,7 @@
+import Debug.Trace
 import Language.Haskell.Interpreter -- hint
 import Data.String
+import Control.Monad
 import Grammata.Types
 import Grammata.TH
 import qualified Data.Text.IO as T
@@ -37,29 +39,61 @@ interpretDoc doc format = do
   loadModules ["Grammata/Format/" ++ format ++ ".hs", "Grammata/TH.hs"]
   set [languageExtensions := [TemplateHaskell]]
   setImportsQ [("Prelude", Nothing), ("Grammata.Format." ++ format, Nothing), ("Grammata.TH", Nothing), ("Data.String", Nothing), ("Language.Haskell.TH", Nothing)]
-  let cmd = "heading"
   res <- parseDoc doc
-  liftIO $ print res
-  return (return $ Block $ T.pack "hi")
+  case res of
+       Left e  -> error (show e)
+       Right r -> return r
 
 lookupCommand :: String -> Interpreter [String]
 lookupCommand cmd = do
   interpret ("$(toTypeSpec " ++ show cmd ++ ")") (as :: [String])
 
 type Parser = ParsecT [Char] () Interpreter
-type CommandSpec = (String, [String])
 
-pCommand :: Parser CommandSpec
-pCommand = try $ do
+pControlSeq :: Parser String
+pControlSeq = try $ do
   char '\\'
   cmd <- many1 alphaNum
+  spaces
+  return cmd
+
+pInlineCommand :: Monad m => Parser (Doc m Inline)
+pInlineCommand = try $ do
+  cmd <- pControlSeq
   typespec <- lift $ lookupCommand cmd
-  return (cmd, typespec)
+  return $ fromString $ show (cmd, typespec)
 
-pTrash :: Parser ()
-pTrash = skipMany (noneOf "\\")
+pBlockCommand :: Monad m => Parser (Doc m Block)
+pBlockCommand = try $ do
+  cmd <- pControlSeq
+  typespec <- lift $ lookupCommand cmd
+  return $ return . Block . T.pack $ show (cmd, typespec)
 
-parseDoc :: String -> Interpreter (Either ParseError [CommandSpec])
-parseDoc = runParserT (many $ try $ pTrash >> pCommand) () "input"
+pBraced :: (Monad m, Monoid a) => Parser (Doc m a) -> Parser (Doc m a)
+pBraced p = do
+  char '{'
+  mconcat <$> manyTill p (char '}')
 
+pComment :: (Monad m, Monoid a) => Parser (Doc m a)
+pComment = do
+  char '%'
+  skipMany (noneOf "\n")
+  optional (char '\n')
+  return mempty
+
+pSkip :: Monad m => Parser (Doc m Block)
+pSkip = space >> spaces >> return mempty
+
+pText :: Monad m => Parser (Doc m Inline)
+pText = fromString <$> many1 (noneOf "\\{}%")
+
+pInlineArg :: Monad m => Parser (Doc m Inline)
+pInlineArg = pBraced (pText <|> pInlineCommand <|> pComment)
+
+pBlockArg :: Monad m => Parser (Doc m Block)
+pBlockArg = pBraced (pBlockCommand <|> pComment <|> (spaces >> return mempty))
+
+parseDoc :: Monad m => String -> Interpreter (Either ParseError (Doc m Block))
+parseDoc = runParserT
+  (mconcat <$> many (pBlockCommand <|> pComment <|> (anyChar >> return mempty)) <* eof) () "input"
 
