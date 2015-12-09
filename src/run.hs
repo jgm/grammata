@@ -1,4 +1,5 @@
 import Language.Haskell.Interpreter -- hint
+import Language.Haskell.TH
 import Data.String
 import Grammata.Types
 import qualified Data.Text.IO as T
@@ -11,13 +12,14 @@ main :: IO ()
 main = do
   args <- getArgs
   progname <- getProgName
-  let (format,file) = case args of
-                       [x,y] -> (x,y)
-                       _ -> error $ "Usage:  " ++ progname ++ " [TeX|Html] file"
+  let (format,file) =
+         case args of
+              [x,y] -> (x,y)
+              _ -> error $ "Usage:  " ++ progname ++ " [TeX|Html] file"
 
   doc <- readFile file
-
   r <- runInterpreter (interpretDoc doc format)
+
   case r of
        Left (WontCompile es) -> mapM_ (putStrLn . showCompileError file) es
        Left err -> putStrLn (show err)
@@ -32,17 +34,47 @@ showCompileError file e =
 
 interpretDoc :: Monad m => String -> String -> Interpreter (Doc m Block)
 interpretDoc doc format = do
-  loadModules ["Grammata.hs", "Grammata/Format/" ++ format ++ ".hs"]
+  loadModules ["Grammata/Format/" ++ format ++ ".hs"]
   set [languageExtensions := [OverloadedStrings, TemplateHaskell, QuasiQuotes]]
-  setImportsQ [("Prelude", Nothing), ("Data.Monoid", Nothing), ("Control.Monad.RWS", Nothing), ("Control.Monad.Identity", Nothing), ("Grammata", Nothing), ("Grammata.Format." ++ format, Nothing), ("Data.String", Nothing), ("Language.Haskell.TH", Nothing), ("Data.Typeable", Nothing)]
+  setImportsQ [("Prelude", Nothing), ("Grammata.Format." ++ format, Nothing), ("Data.String", Nothing), ("Language.Haskell.TH", Nothing)]
   let cmd = "heading"
   return . return . Block . fromString . show =<< parseDoc doc
 
 lookupCommand :: String -> Interpreter [TypeSpec]
-lookupCommand cmd = (:[]) <$> interpret ("$(stringE =<< show <$> reify (mkName " ++ show cmd ++ " ))") (as :: String)
+lookupCommand cmd = do
+  rawTS <- interpret ("$(stringE =<< show <$> reify (mkName " ++
+                            show cmd ++ "))") (as :: String)
+  return $ toTypeSpec rawTS
+
+toTypeSpec :: String -> [TypeSpec]
+toTypeSpec = (:[])
 {-
-lookupCommand cmd =
-  map shortenType . splitType <$> interpret ("show $ typeOf $(varE (mkName " ++ show cmd ++ "))") (as :: String)
+VarI
+  Grammata.Format.Html.emph
+  (ForallT
+    [KindedTV m_1627415771 (AppT (AppT ArrowT StarT) StarT)]
+    [AppT (ConT GHC.Base.Monad) (VarT m_1627415771)]
+    (AppT
+      (AppT ArrowT
+        (AppT
+          (AppT
+            (ConT Grammata.Types.Doc)
+            (VarT m_1627415771)
+          )
+          (ConT Grammata.Types.Inline)
+        )
+      )
+      (AppT
+        (AppT
+          (ConT Grammata.Types.Doc)
+          (VarT m_1627415771)
+        )
+        (ConT Grammata.Types.Inline)
+      )
+    )
+   )
+  Nothing
+  (Fixity 9 InfixL)
 -}
 
 type TypeSpec = String
@@ -64,7 +96,7 @@ pCommand = try $ do
   char '\\'
   cmd <- many1 alphaNum
   typespec <- lift $ lookupCommand cmd
-  return (cmd, typespec)
+  return (cmd, [show typespec])
 
 pTrash :: Parser ()
 pTrash = skipMany (noneOf "\\")
