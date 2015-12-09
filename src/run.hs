@@ -1,7 +1,7 @@
 import Language.Haskell.Interpreter -- hint
-import Language.Haskell.TH
 import Data.String
 import Grammata.Types
+import Grammata.TH
 import qualified Data.Text.IO as T
 import Data.List (isPrefixOf)
 import System.Environment
@@ -42,39 +42,7 @@ interpretDoc doc format = do
 
 lookupCommand :: String -> Interpreter [TypeSpec]
 lookupCommand cmd = do
-  rawTS <- interpret ("$(toTypeSpec " ++ show cmd ++ ")") (as :: [String])
-  return rawTS -- $ toTypeSpec rawTS
-
-{-
-VarI
-  Grammata.Format.Html.emph
-  (ForallT
-    [KindedTV m_1627415771 (AppT (AppT ArrowT StarT) StarT)]
-    [AppT (ConT GHC.Base.Monad) (VarT m_1627415771)]
-    (AppT
-      (AppT ArrowT
-        (AppT
-          (AppT
-            (ConT Grammata.Types.Doc)
-            (VarT m_1627415771)
-          )
-          (ConT Grammata.Types.Inline)
-        )
-      )
-      (AppT
-        (AppT
-          (ConT Grammata.Types.Doc)
-          (VarT m_1627415771)
-        )
-        (ConT Grammata.Types.Inline)
-      )
-    )
-   )
-  Nothing
-  (Fixity 9 InfixL)
--}
-
-type TypeSpec = String
+  interpret ("$(toTypeSpec " ++ show cmd ++ ")") (as :: [String])
 
 shortenType :: String -> String
 shortenType s
