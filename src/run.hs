@@ -42,12 +42,12 @@ interpretDoc doc format = do
   liftIO $ print res
   return (return $ Block $ T.pack "hi")
 
-lookupCommand :: String -> Interpreter [TypeSpec]
+lookupCommand :: String -> Interpreter [String]
 lookupCommand cmd = do
-  interpret ("$(toTypeSpec " ++ show cmd ++ ")") (as :: [TypeSpec])
+  interpret ("$(toTypeSpec " ++ show cmd ++ ")") (as :: [String])
 
 type Parser = ParsecT [Char] () Interpreter
-type CommandSpec = (String, [TypeSpec])
+type CommandSpec = (String, [String])
 
 pCommand :: Parser CommandSpec
 pCommand = try $ do
