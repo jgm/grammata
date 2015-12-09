@@ -23,9 +23,10 @@ Flag executable
 
 Library
     Build-depends:       base >= 4.5 && < 5, containers, text,
-                         attoparsec, mtl
+                         attoparsec, mtl, template-haskell
     Exposed-modules:     Grammata
                          Grammata.Parse
+                         Grammata.TH
                          Grammata.Types
                          Grammata.Format.Html
                          Grammata.Format.TeX

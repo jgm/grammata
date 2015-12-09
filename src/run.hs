@@ -34,20 +34,18 @@ showCompileError file e =
 
 interpretDoc :: Monad m => String -> String -> Interpreter (Doc m Block)
 interpretDoc doc format = do
-  loadModules ["Grammata/Format/" ++ format ++ ".hs"]
+  loadModules ["Grammata/Format/" ++ format ++ ".hs", "Grammata/TH.hs"]
   set [languageExtensions := [OverloadedStrings, TemplateHaskell, QuasiQuotes]]
-  setImportsQ [("Prelude", Nothing), ("Grammata.Format." ++ format, Nothing), ("Data.String", Nothing), ("Language.Haskell.TH", Nothing)]
+  setImportsQ [("Prelude", Nothing), ("Grammata.Format." ++ format, Nothing), ("Grammata.TH", Nothing), ("Data.String", Nothing), ("Language.Haskell.TH", Nothing)]
   let cmd = "heading"
   return . return . Block . fromString . show =<< parseDoc doc
 
 lookupCommand :: String -> Interpreter [TypeSpec]
 lookupCommand cmd = do
-  rawTS <- interpret ("$(stringE =<< show <$> reify (mkName " ++
-                            show cmd ++ "))") (as :: String)
-  return $ toTypeSpec rawTS
+  rawTS <- interpret ("$(listE . map stringE =<< toTypeSpec <$> reify (mkName " ++
+                            show cmd ++ "))") (as :: [String])
+  return rawTS -- $ toTypeSpec rawTS
 
-toTypeSpec :: String -> [TypeSpec]
-toTypeSpec = (:[])
 {-
 VarI
   Grammata.Format.Html.emph
