@@ -3,6 +3,7 @@ import Data.String
 import Grammata.Types
 import Grammata.TH
 import qualified Data.Text.IO as T
+import qualified Data.Text as T
 import Data.List (isPrefixOf)
 import System.Environment
 import Text.Parsec
@@ -34,10 +35,12 @@ showCompileError file e =
 interpretDoc :: Monad m => String -> String -> Interpreter (Doc m Block)
 interpretDoc doc format = do
   loadModules ["Grammata/Format/" ++ format ++ ".hs", "Grammata/TH.hs"]
-  set [languageExtensions := [OverloadedStrings, TemplateHaskell, QuasiQuotes]]
+  set [languageExtensions := [TemplateHaskell]]
   setImportsQ [("Prelude", Nothing), ("Grammata.Format." ++ format, Nothing), ("Grammata.TH", Nothing), ("Data.String", Nothing), ("Language.Haskell.TH", Nothing)]
   let cmd = "heading"
-  return . return . Block . fromString . show =<< parseDoc doc
+  res <- parseDoc doc
+  liftIO $ print res
+  return (return $ Block $ T.pack "hi")
 
 lookupCommand :: String -> Interpreter [TypeSpec]
 lookupCommand cmd = do
