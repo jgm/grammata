@@ -53,8 +53,7 @@ showCompileError file e =
 interpretDoc :: Int -> String -> String -> Interpreter (Doc IO Block)
 interpretDoc verbosity doc format = do
   loadModules ["Grammata.Format." ++ format]
-  set [languageExtensions := [TemplateHaskell, OverloadedStrings],
-        searchPath := []]
+  set [languageExtensions := [TemplateHaskell, OverloadedStrings]]
   setImports ["Prelude", "Grammata.Format." ++ format, "Data.String", "Data.Monoid", "Language.Haskell.TH", "Grammata.Types", "Control.Monad.RWS"]
   res <- parseDoc doc
   case res of
