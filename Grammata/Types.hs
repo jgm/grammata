@@ -76,3 +76,10 @@ instance ToArg Bool where
              "false" -> Right False
              _       -> Left "Boolean argument must be true or false"
 
+newtype HeaderLevel = HeaderLevel { unHeaderLevel :: String }
+  deriving (Read, Show, Eq, Ord, Data, Typeable)
+
+instance ToArg HeaderLevel where
+  toArg [c] | c >= '1' && c <= '6' = Right (HeaderLevel [c])
+  toArg _   = Left "HeaderLevel must be between 1 and 6"
+

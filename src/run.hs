@@ -119,13 +119,15 @@ processArgs = fmap mconcat . mapM processArg
 processArg :: String -> Parser Text
 processArg x | "Doc" `isPrefixOf` x && "Inline" `isSuffixOf` x = pInlineArg
 processArg x | "Doc" `isPrefixOf` x && "Block" `isSuffixOf` x = pBlockArg
-processArg "Int" = try $ do
+processArg x = try $ do
   spaces
   char '{'
-  ds <- many1 digit
+  cs <- many (noneOf "\\}" <|> try (char '\\' >> anyChar))
   char '}'
-  return $ T.pack ds
-processArg x = fail $ "Argument type "  ++ x ++ " unimplemented"
+  res <- lift $ checkedRead cs x
+  case res of
+      Left e   -> fail e
+      Right r  -> return $ T.pack r
 
 pBraced :: Parser Text -> Parser Text
 pBraced p = try $ do
