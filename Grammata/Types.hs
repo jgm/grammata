@@ -58,3 +58,10 @@ instance (Monad m, Monoid a) => Monoid (Doc m a) where
   mempty = return mempty
   mappend = liftM2 mappend
 
+class ToArg a where
+  toArg :: String -> Either String a
+
+instance ToArg Int where
+  toArg ds = case (reads ds :: [(Int,String)]) of
+                  ((i,""):_) -> Right i
+                  _          -> Left "Not an integer"

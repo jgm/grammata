@@ -165,8 +165,16 @@ parseDoc = runParserT
 -- assumes ty is a string rep of a type with matched Show and Read
 checkedRead :: String -> String -> Interpreter (Either String String)
 checkedRead val ty = do
-  res <- Catch.try $ interpret ("map (\\(x,y) -> (show x,y)) (Prelude.reads " ++ show val ++ " :: [(" ++ ty ++ ", String)])") (as :: [(String, String)])
-  case (res :: Either Catch.SomeException [(String,String)]) of
-     Right ((x,""):_) -> return $ Right x
+  res <- Catch.try $ interpret ("fmap show (toArg " ++
+                                 show val ++ " :: Either String " ++ ty ++ ")")
+              (as :: Either String String)
+  case (res :: Either InterpreterError (Either String String)) of
+     Right (Right x) -> return $ Right x
+     Right (Left e)  -> return $ Left $
+                          "Could not parse " ++ show val ++ " as " ++ ty ++
+                          "\n" ++ e
+     Left (WontCompile es)  -> return $ Left $
+                          "Could not parse " ++ show val ++ " as " ++ ty ++
+                          "\n" ++ unlines (map errMsg es)
      _                -> return $ Left $
                           "Could not parse " ++ show val ++ " as " ++ ty
