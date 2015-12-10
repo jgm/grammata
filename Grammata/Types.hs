@@ -40,12 +40,9 @@ data DocState = DocState {
 defDocState :: DocState
 defDocState = DocState M.empty
 
-data Message = Message Int Int Text
-  deriving (Read, Show, Eq, Ord, Data, Typeable)
+type Doc = RWST DocState [String] DocState
 
-type Doc = RWST DocState [Message] DocState
-
-runDoc :: Monad m => Doc m a -> m (a, DocState, [Message])
+runDoc :: Monad m => Doc m a -> m (a, DocState, [String])
 runDoc doc = do
   (_, s, _) <- runRWST doc defDocState defDocState
   runRWST doc defDocState s

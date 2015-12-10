@@ -17,7 +17,10 @@ para :: Monad m => Doc m Inline -> Doc m Block
 para = fmap (Block . inTag "p" . unInline)
 
 heading :: Monad m => Int -> Doc m Inline -> Doc m Block
-heading lev = fmap (Block . inTag ("h" <> show lev) . unInline)
+heading lev ils = do
+  if lev < 1 || lev > 6
+     then fail $ "Illegal header level " <> show lev
+     else fmap (Block . inTag ("h" <> show lev) . unInline) ils
 
 today :: Doc IO Inline
 today = escapeHtml . show <$> liftIO (utctDay <$> getCurrentTime)
