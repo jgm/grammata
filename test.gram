@@ -1,3 +1,4 @@
+\doc{
 %\heading{0}{My heading}
 
 \para{This is a paragraph with
@@ -5,3 +6,4 @@ some \emph{emphasized text} \cpuTime.}
 \para{\emph{hello}}
 
 \para{This is another paragraph.}
+}

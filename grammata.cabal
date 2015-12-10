@@ -23,12 +23,14 @@ Flag executable
 
 Library
     Build-depends:       base >= 4.5 && < 5, containers, text,
-                         mtl, template-haskell, bytestring >= 0.10
+                         mtl, template-haskell, bytestring >= 0.10,
+                         directory, process, temporary, filepath
     Exposed-modules:     Grammata
                          Grammata.TH
                          Grammata.Types
                          Grammata.Format.Html
                          Grammata.Format.TeX
+                         Grammata.Format.PDF
     if impl(ghc >= 6.12)
       Ghc-Options:     -Wall -fno-warn-unused-do-bind
     else

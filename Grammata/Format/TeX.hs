@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Grammata.Format.TeX (lit, cpuTime, emph, para, heading) where
+module Grammata.Format.TeX (lit, cpuTime, emph, para, heading, doc) where
 
 import Grammata.Types
 import Control.Monad.RWS
@@ -21,6 +21,9 @@ para = fmap (Block . (<> "\n") . unInline)
 
 heading :: Monad m => HeadingLevel -> Doc m Inline -> Doc m Block
 heading lev = fmap (Block . unInline)
+
+doc :: Monad m => Doc m Block -> Doc m Block
+doc d = d <> para "\\bye"
 
 escapeTeX :: String -> Inline
 escapeTeX = Inline . mconcat . map escapeTeXChar

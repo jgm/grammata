@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Grammata.Format.Html (lit, emph, para, heading, cpuTime) where
+module Grammata.Format.Html (lit, emph, para, heading, cpuTime, doc) where
 
 import Grammata.Types
 import Control.Monad.RWS
@@ -21,6 +21,9 @@ heading lev = fmap (Block . inTag ("h" <> unHeadingLevel lev) . unInline)
 
 cpuTime :: Doc IO Inline
 cpuTime = escapeHtml . show <$> liftIO getCPUTime
+
+doc :: Monad m => Doc m Block -> Doc m Block
+doc = id
 
 -- utility functions
 inTag :: String -> Builder -> Builder

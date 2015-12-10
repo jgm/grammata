@@ -95,7 +95,8 @@ processArg "Block" = pBlockArg
 processArg x = fail $ "Argument type "  ++ x ++ " unimplemented"
 
 pBraced :: Parser Text -> Parser Text
-pBraced p = do
+pBraced p = try $ do
+  spaces
   char '{'
   (inParens . T.intercalate " <> ") <$> manyTill p (char '}')
 
@@ -115,10 +116,12 @@ pText :: Parser Text
 pText = (fromString . show) <$> many1 (noneOf "\\{}%")
 
 pInlineArg :: Parser Text
-pInlineArg = pBraced (try $ skipMany pComment >> (pText <|> pInlineCommand))
+pInlineArg = pBraced (try $ skipMany pComment >> (pText <|> pInlineCommand)
+                             <* skipMany pComment)
 
 pBlockArg :: Parser Text
-pBlockArg = pBraced (try $ skipMany (pComment <|> pSkip) >> pBlockCommand)
+pBlockArg = pBraced (try $ skipMany (pComment <|> pSkip) >> pBlockCommand
+                             <* skipMany (pComment <|> pSkip))
 
 parseDoc :: String -> Interpreter (Either ParseError Text)
 parseDoc = runParserT
