@@ -28,6 +28,7 @@ Library
     Exposed-modules:     Grammata
                          Grammata.TH
                          Grammata.Types
+                         Grammata.Util
                          Grammata.Format.Html
                          Grammata.Format.TeX
                          Grammata.Format.PDF

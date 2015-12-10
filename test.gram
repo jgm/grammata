@@ -1,9 +1,14 @@
 \doc{
 %\heading{0}{My heading}
 
-\para{This is a paragraph with
-some \emph{emphasized text} \cpuTime.}
-\para{\emph{hello}}
+\para{CPU time is \cpuTime.}
 
-\para{This is another paragraph.}
+\para{\emph{Lorem ipsum dolor sit amet}, facete eloquentiam nec eu. Dicat ullum mea ei. Mutat officiis dissentias vim ut, tation mentitum consectetuer sit eu, in eum facer zril philosophia. Cu vis dicit eloquentiam, mei detraxit eloquentiam ei, case convenire splendide mea et.}
+
+\para{Vel sale reprimique scribentur ei. Sed vide nostrud cu, vel prima viris erroribus ad. Tantas mediocritatem usu ut. Vel augue ignota vocibus ne, ei epicurei consulatu consequuntur mel.}
+
+\para{Quis nobis animal mel ea, cu vel sumo aeque oportere. Ius solum altera noluisse cu, cibo docendi sea no. Et agam vocibus mnesarchum usu, his accumsan vituperatoribus id. Usu enim recteque instructior cu. Eu esse oratio civibus duo, his stet audiam ne, vis in quando patrioque mediocritatem.}
+
+\para{No mei nostrum platonem, fabellas pericula conclusionemque mea ne, cu quo scripta numquam. Vel ne mundi putent integre. Ex mei aperiam feugait, has eu delectus facilisi consulatu. Assum aeque persecuti vim id, his et oporteat electram torquatos, te eum epicuri singulis maluisset. Mel delectus quaerendum no. Est dico feugiat singulis in, mea an utinam tamquam menandri.}
+
 }

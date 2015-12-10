@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 -- import Debug.Trace
+import Control.Monad
 import Language.Haskell.Interpreter -- hint
 import Data.String
 import Data.Monoid
@@ -17,13 +18,20 @@ main :: IO ()
 main = do
   args <- getArgs
   progname <- getProgName
+  let verbosity = if "-v2" `elem` args
+                     then 2
+                     else if "-v1" `elem` args
+                          then 1
+                          else 0
+  let args' = filter (not . isPrefixOf "-v") args
   let (format,file) =
-         case args of
+         case args' of
               [x,y] -> (x,y)
-              _ -> error $ "Usage:  " ++ progname ++ " [TeX|Html] file"
+              _ -> error $ "Usage:  " ++ progname ++
+                             "[-v1|-v2] [TeX|Html|PDF] file"
 
   doc <- readFile file
-  r <- runInterpreter (interpretDoc doc format)
+  r <- runInterpreter (interpretDoc verbosity doc format)
 
   case r of
        Left (WontCompile es) -> mapM_ (putStrLn . showCompileError file) es
@@ -39,16 +47,18 @@ showCompileError file e =
      else e'
   where e' = errMsg e
 
-interpretDoc :: String -> String -> Interpreter (Doc IO Block)
-interpretDoc doc format = do
-  loadModules ["Grammata/Format/" ++ format ++ ".hs", "Grammata/TH.hs"]
+interpretDoc :: Int -> String -> String -> Interpreter (Doc IO Block)
+interpretDoc verbosity doc format = do
+  loadModules ["Grammata.Format." ++ format, "Grammata.TH"]
   set [languageExtensions := [TemplateHaskell, OverloadedStrings]]
-  setImportsQ [("Prelude", Nothing), ("Grammata.Format." ++ format, Nothing), ("Grammata.TH", Nothing), ("Data.String", Nothing), ("Data.Monoid", Nothing), ("Language.Haskell.TH", Nothing), ("Grammata.Types", Nothing), ("Control.Monad.RWS", Nothing)]
+  setImports ["Prelude", "Grammata.Format." ++ format, "Grammata.TH", "Data.String", "Data.Monoid", "Language.Haskell.TH", "Grammata.Types", "Control.Monad.RWS"]
+  x <- typeOf "emph"
+  liftIO $ print x
   res <- parseDoc doc
   case res of
        Left e  -> error (show e)
        Right r -> do
-          liftIO $ T.hPutStrLn stderr r
+          when (verbosity >= 2) $ liftIO $ T.hPutStrLn stderr r
           interpret (T.unpack r) (as :: Doc IO Block)
 
 lookupCommand :: String -> Interpreter (Maybe (String, [String]))
