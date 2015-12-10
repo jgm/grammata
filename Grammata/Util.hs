@@ -7,14 +7,13 @@ import System.Process
 import System.Exit
 import System.IO
 import System.IO.Temp
-import System.FilePath ((</>))
 
 runxetex :: BL.ByteString -> IO B.ByteString
 runxetex b = withSystemTempDirectory "grammata.XXXX" $ \dir -> do
     oldDir <- getCurrentDirectory
     setCurrentDirectory dir
     BL.writeFile "temp.tex" b
-    ec <- rawSystem "xetex" ["temp.tex"]
+    ec <- rawSystem "xetex" ["-interaction=nonstopmode", "temp.tex"]
     case ec of
         ExitFailure code -> do
           hPutStrLn stderr $ "Could not create PDF:"
@@ -22,4 +21,4 @@ runxetex b = withSystemTempDirectory "grammata.XXXX" $ \dir -> do
           exitWith $ ExitFailure 1
         ExitSuccess      -> do
           setCurrentDirectory oldDir
-          B.readFile (dir </> "temp.pdf")
+          B.readFile (dir ++ "/temp.pdf")

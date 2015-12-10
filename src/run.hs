@@ -8,7 +8,8 @@ import Grammata.Types
 import qualified Data.Text.IO as T
 import qualified Data.Text as T
 import Data.Text (Text)
-import Data.List (isPrefixOf)
+import Data.List (isPrefixOf, isSuffixOf)
+import Data.List.Split (splitOn)
 import System.Environment
 import System.IO (stderr)
 import Text.Parsec
@@ -30,7 +31,9 @@ main = do
               _ -> error $ "Usage:  " ++ progname ++
                              "[-v1|-v2] [TeX|Html|PDF] file"
 
-  doc <- readFile file
+  doc <- if file == "-"
+            then getContents
+            else readFile file
   r <- runInterpreter (interpretDoc verbosity doc format)
 
   case r of
@@ -49,11 +52,10 @@ showCompileError file e =
 
 interpretDoc :: Int -> String -> String -> Interpreter (Doc IO Block)
 interpretDoc verbosity doc format = do
-  loadModules ["Grammata.Format." ++ format, "Grammata.TH"]
-  set [languageExtensions := [TemplateHaskell, OverloadedStrings]]
-  setImports ["Prelude", "Grammata.Format." ++ format, "Grammata.TH", "Data.String", "Data.Monoid", "Language.Haskell.TH", "Grammata.Types", "Control.Monad.RWS"]
-  x <- typeOf "emph"
-  liftIO $ print x
+  loadModules ["Grammata.Format." ++ format]
+  set [languageExtensions := [TemplateHaskell, OverloadedStrings],
+        searchPath := []]
+  setImports ["Prelude", "Grammata.Format." ++ format, "Data.String", "Data.Monoid", "Language.Haskell.TH", "Grammata.Types", "Control.Monad.RWS"]
   res <- parseDoc doc
   case res of
        Left e  -> error (show e)
@@ -63,11 +65,24 @@ interpretDoc verbosity doc format = do
 
 lookupCommand :: String -> Interpreter (Maybe (String, [String]))
 lookupCommand cmd = do
-  xs <- interpret ("$(toTypeSpec " ++ show cmd ++ ")") (as :: [String])
+  xs <- typeSpecOf cmd
+  -- xs <- interpret ("$(toTypeSpec " ++ show cmd ++ ")") (as :: [String])
   return $
     if null xs
        then Nothing
        else Just (last xs, init xs) -- result, args
+
+typeSpecOf :: String -> Interpreter [String]
+typeSpecOf cmd = do
+  tc <- typeChecks cmd
+  if tc
+     then do
+       ty <- map (\c -> if c == '\n' then ' ' else c) <$> typeOf cmd
+       return $ splitOn " -> " $
+                 if "Monad m => " `isPrefixOf` ty
+                    then drop 11 ty
+                    else ty
+     else return []
 
 type Parser = ParsecT [Char] () Interpreter
 
@@ -84,7 +99,8 @@ pInlineCommand = do
   typespec <- lift $ lookupCommand cmd
   case typespec of
        Nothing               -> fail $ "Undefined command " ++ cmd
-       Just ("Inline", args) -> ((T.pack cmd <> " ") <>) <$> processArgs args
+       Just (x, args) | "Inline" `isSuffixOf` x ->
+          ((T.pack cmd <> " ") <>) <$> processArgs args
        Just _                -> fail $ cmd ++ " does not return Inline"
 
 pBlockCommand :: Parser Text
@@ -93,15 +109,16 @@ pBlockCommand = do
   typespec <- lift $ lookupCommand cmd
   case typespec of
        Nothing              -> fail $ "Undefined command " ++ cmd
-       Just ("Block", args) -> ((T.pack cmd <> " ") <>) <$> processArgs args
+       Just (x, args) | "Block" `isSuffixOf` x ->
+          ((T.pack cmd <> " ") <>) <$> processArgs args
        Just _               -> fail $ cmd ++ " does not return Block"
 
 processArgs :: [String] -> Parser Text
 processArgs = fmap mconcat . mapM processArg
 
 processArg :: String -> Parser Text
-processArg "Inline" = pInlineArg
-processArg "Block" = pBlockArg
+processArg x | "Doc" `isPrefixOf` x && "Inline" `isSuffixOf` x = pInlineArg
+processArg x | "Doc" `isPrefixOf` x && "Block" `isSuffixOf` x = pBlockArg
 processArg x = fail $ "Argument type "  ++ x ++ " unimplemented"
 
 pBraced :: Parser Text -> Parser Text
