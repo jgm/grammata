@@ -19,7 +19,7 @@ emph t = "{\\it " <> t <> "}"
 para :: Monad m => Doc m Inline -> Doc m Block
 para = fmap (Block . (<> "\n") . unInline)
 
-heading :: Monad m => HeadingLevel -> Doc m Inline -> Doc m Block
+heading :: Monad m => Int -> Doc m Inline -> Doc m Block
 heading lev = fmap (Block . unInline)
 
 doc :: Monad m => Doc m Block -> Doc m Block

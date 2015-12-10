@@ -61,8 +61,3 @@ instance (Monad m, Monoid a) => Monoid (Doc m a) where
   mempty = return mempty
   mappend = liftM2 mappend
 
-newtype HeadingLevel = HeadingLevel { unHeadingLevel :: String }
-
-instance IsString HeadingLevel where
-  fromString = HeadingLevel
-

@@ -16,8 +16,8 @@ emph = fmap (Inline . inTag "em" . unInline)
 para :: Monad m => Doc m Inline -> Doc m Block
 para = fmap (Block . inTag "p" . unInline)
 
-heading :: Monad m => HeadingLevel -> Doc m Inline -> Doc m Block
-heading lev = fmap (Block . inTag ("h" <> unHeadingLevel lev) . unInline)
+heading :: Monad m => Int -> Doc m Inline -> Doc m Block
+heading lev = fmap (Block . inTag ("h" <> show lev) . unInline)
 
 today :: Doc IO Inline
 today = escapeHtml . show <$> liftIO (utctDay <$> getCurrentTime)
