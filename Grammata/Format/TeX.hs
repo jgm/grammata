@@ -20,7 +20,7 @@ para :: Monad m => Doc m Inline -> Doc m Block
 para = fmap (Block . (<> "\n") . unInline)
 
 heading :: Monad m => Int -> Doc m Inline -> Doc m Block
-heading lev = fmap (Block . unInline)
+heading lev = para
 
 doc :: Monad m => Doc m Block -> Doc m Block
 doc d = d <> para "\\bye"
