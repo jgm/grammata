@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 -- import Debug.Trace
 import Control.Monad
+import qualified Control.Monad.Catch as Catch
 import Language.Haskell.Interpreter -- hint
 import Data.String
 import Data.Monoid
@@ -161,3 +162,11 @@ parseDoc = runParserT
     many (try $ skipMany (pComment <|> pSkip) >> pBlockCommand)
       <* spaces <* eof) () "input"
 
+-- assumes ty is a string rep of a type with matched Show and Read
+checkedRead :: String -> String -> Interpreter (Either String String)
+checkedRead val ty = do
+  res <- Catch.try $ interpret ("map (\\(x,y) -> (show x,y)) (Prelude.reads " ++ show val ++ " :: [(" ++ ty ++ ", String)])") (as :: [(String, String)])
+  case (res :: Either Catch.SomeException [(String,String)]) of
+     Right ((x,""):_) -> return $ Right x
+     _                -> return $ Left $
+                          "Could not parse " ++ show val ++ " as " ++ ty
