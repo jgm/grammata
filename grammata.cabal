@@ -24,7 +24,7 @@ Flag executable
 Library
     Build-depends:       base >= 4.5 && < 5, containers, text,
                          mtl, template-haskell, bytestring >= 0.10,
-                         directory, process, temporary
+                         directory, process, temporary, time
     Exposed-modules:     Grammata
                          Grammata.Types
                          Grammata.Util

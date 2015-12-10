@@ -1,17 +1,17 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Grammata.Format.TeX (lit, cpuTime, emph, para, heading, doc) where
+module Grammata.Format.TeX (lit, today, emph, para, heading, doc) where
 
 import Grammata.Types
 import Control.Monad.RWS
-import System.CPUTime
+import Data.Time
 import Data.ByteString.Builder (Builder, stringUtf8, charUtf8)
 
 lit :: Monad m => String -> Doc m Inline
 lit = return . escapeTeX
 
-cpuTime :: Doc IO Inline
-cpuTime = escapeTeX . show <$> liftIO getCPUTime
+today :: Doc IO Inline
+today = escapeTeX . show <$> liftIO (utctDay <$> getCurrentTime)
 
 emph :: Monad m => Doc m Inline -> Doc m Inline
 emph t = "{\\it " <> t <> "}"
