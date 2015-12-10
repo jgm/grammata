@@ -8,12 +8,13 @@ module Grammata.Types where
 
 import Data.Text (Text)
 import Data.String
-import Data.Map as M
+import qualified Data.Map as M
 import Data.Data
+import Data.Char (toLower)
 import Control.Monad.RWS
 import qualified Data.ByteString.Builder as B
 import Data.ByteString.Builder (Builder)
-import Data.ByteString.Lazy as BL
+import qualified Data.ByteString.Lazy as BL
 
 newtype Block = Block { unBlock :: Builder }
 
@@ -58,10 +59,20 @@ instance (Monad m, Monoid a) => Monoid (Doc m a) where
   mempty = return mempty
   mappend = liftM2 mappend
 
-class ToArg a where
+class (Read a) => ToArg a where
   toArg :: String -> Either String a
+  -- default (use Read instance)
+  toArg ds = case (reads ds :: Read a => [(a,String)]) of
+                      ((i,""):_) -> Right i
+                      _          -> Left ""
 
-instance ToArg Int where
-  toArg ds = case (reads ds :: [(Int,String)]) of
-                  ((i,""):_) -> Right i
-                  _          -> Left "Not an integer"
+instance ToArg Int
+instance ToArg Integer
+instance ToArg Double
+
+instance ToArg Bool where
+  toArg s = case map toLower s of
+             "true"  -> Right True
+             "false" -> Right False
+             _       -> Left "Boolean argument must be true or false"
+

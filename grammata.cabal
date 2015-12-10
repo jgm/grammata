@@ -52,7 +52,7 @@ Executable grammata
       Buildable:         True
       Build-Depends:     base >= 4.5 && < 5, grammata, parsec,
                          template-haskell, split, text, hint,
-                         bytestring >= 0.10
+                         bytestring >= 0.10, exceptions
     else
       Buildable:         False
 

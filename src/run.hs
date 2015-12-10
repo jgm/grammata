@@ -9,7 +9,7 @@ import Grammata.Types
 import qualified Data.Text.IO as T
 import qualified Data.Text as T
 import Data.Text (Text)
-import Data.List (isPrefixOf, isSuffixOf)
+import Data.List (isPrefixOf, isSuffixOf, isInfixOf)
 import Data.List.Split (splitOn)
 import System.Environment
 import System.IO (stderr)
@@ -173,8 +173,10 @@ checkedRead val ty = do
      Right (Left e)  -> return $ Left $
                           "Could not parse " ++ show val ++ " as " ++ ty ++
                           "\n" ++ e
-     Left (WontCompile es)  -> return $ Left $
+     Left (WontCompile (e:_)) |
+       ("No instance for (ToArg " ++ ty ++ ")") `isInfixOf` errMsg e
+                      -> return $ Left $
                           "Could not parse " ++ show val ++ " as " ++ ty ++
-                          "\n" ++ unlines (map errMsg es)
+                          "\nNo ToArg instance is defined for " ++ ty
      _                -> return $ Left $
                           "Could not parse " ++ show val ++ " as " ++ ty
