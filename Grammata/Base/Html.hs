@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Grammata.Format.Html (lit, emph, para, heading, today, doc) where
+module Grammata.Base.Html (lit, emph, para, heading, today, doc) where
 
 import Grammata.Types
 import Control.Monad.RWS

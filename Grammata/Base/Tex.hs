@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Grammata.Format.TeX (lit, today, emph, para, heading, doc) where
+module Grammata.Base.Tex (lit, today, emph, para, heading, doc) where
 
 import Grammata.Types
 import Control.Monad.RWS

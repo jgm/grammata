@@ -14,6 +14,7 @@ import Data.List.Split (splitOn)
 import System.Environment
 import System.IO (stderr)
 import Text.Parsec
+import Data.Char (toUpper, toLower)
 import qualified Data.ByteString.Lazy as BL
 
 main :: IO ()
@@ -28,9 +29,9 @@ main = do
   let args' = filter (not . isPrefixOf "-v") args
   let (format,file) =
          case args' of
-              [x,y] -> (x,y)
+              [(x:xs),y] -> ((toUpper x:map toLower xs),y)
               _ -> error $ "Usage:  " ++ progname ++
-                             "[-v1|-v2] [TeX|Html|PDF] file"
+                             "[-v1|-v2] [tex|html|pdf] file"
 
   doc <- if file == "-"
             then getContents
@@ -53,9 +54,9 @@ showCompileError file e =
 
 interpretDoc :: Int -> String -> String -> Interpreter (Doc IO Block)
 interpretDoc verbosity doc format = do
-  loadModules ["Grammata.Format." ++ format]
+  loadModules ["Grammata.Base." ++ format]
   set [languageExtensions := [TemplateHaskell, OverloadedStrings]]
-  setImports ["Prelude", "Grammata.Format." ++ format, "Data.String", "Data.Monoid", "Language.Haskell.TH", "Grammata.Types", "Control.Monad.RWS"]
+  setImports ["Prelude", "Grammata.Base." ++ format, "Data.String", "Data.Monoid", "Language.Haskell.TH", "Grammata.Types", "Control.Monad.RWS"]
   res <- parseDoc doc
   case res of
        Left e  -> error (show e)

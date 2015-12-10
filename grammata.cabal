@@ -28,9 +28,9 @@ Library
     Exposed-modules:     Grammata
                          Grammata.Types
                          Grammata.Util
-                         Grammata.Format.Html
-                         Grammata.Format.TeX
-                         Grammata.Format.PDF
+                         Grammata.Base.Html
+                         Grammata.Base.Tex
+                         Grammata.Base.Pdf
     if impl(ghc >= 6.12)
       Ghc-Options:     -Wall -fno-warn-unused-do-bind
     else
