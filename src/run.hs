@@ -98,10 +98,10 @@ pBraced :: Parser Text -> Parser Text
 pBraced p = try $ do
   spaces
   char '{'
-  (inParens . T.intercalate " <> ") <$> manyTill p (char '}')
+  inconcat <$> manyTill p (char '}')
 
-inParens :: Text -> Text
-inParens t = "(" <> t <> ")"
+inconcat :: [Text] -> Text
+inconcat ts = "(" <> T.intercalate "\n<>\n" ts <> ")"
 
 pComment :: Parser ()
 pComment = do
