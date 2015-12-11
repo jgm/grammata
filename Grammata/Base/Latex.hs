@@ -23,7 +23,7 @@ heading :: Monad m => HeaderLevel -> Doc m Inline -> Doc m Block
 heading _lev = fmap (Block . (\t -> "\\section{" <> t <> "}\n") . unInline)
 
 doc :: Monad m => Doc m Block -> Doc m Block
-doc d = para "\\documentclass{article}\n\\usepackage{fontspec}\n\\begin{document}\n\\fontsize{12}{14}\\fontspec{Hoefler Text}\n" <> d <> para "\\end{document}"
+doc d = para "\\documentclass{article}\n\\usepackage{fontspec}\n\\begin{document}\n\\fontsize{12}{15}\\fontspec[Ligatures={Common,Rare}, Alternate=1]{Hoefler Text}\n" <> d <> para "\\end{document}"
 
 escapeTeX :: String -> Inline
 escapeTeX = Inline . mconcat . map escapeTeXChar
