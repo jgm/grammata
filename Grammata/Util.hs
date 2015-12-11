@@ -1,5 +1,6 @@
-module Grammata.Util (runxelatex) where
+module Grammata.Util (runxelatex, showInterpreterError) where
 
+import Language.Haskell.Interpreter (InterpreterError(..), errMsg)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
 import System.Directory
@@ -22,3 +23,11 @@ runxelatex b = withSystemTempDirectory "grammata.XXXX" $ \dir -> do
         ExitSuccess      -> do
           setCurrentDirectory oldDir
           B.readFile (dir ++ "/temp.pdf")
+
+showInterpreterError :: InterpreterError -> String
+showInterpreterError err =
+  case err of
+       (WontCompile es) -> concatMap errMsg es
+       (NotAllowed e) -> e
+       (UnknownError e) -> e
+       (GhcException e) -> e

@@ -1,13 +1,25 @@
-module Grammata.Chart (Chart(..), toSVG, writeEPS) where
+module Grammata.Chart (Chart(..), toSVG, writeEPS, parseChart) where
 
 import Graphics.Rendering.Chart.Easy
 import Graphics.Rendering.Chart.Backend.Diagrams
 import qualified Data.ByteString.Lazy as BL
+import Grammata.Types hiding (render)
+import Language.Haskell.Interpreter -- hint
 
 newtype Chart = Chart {unChart :: EC (Layout Double Double) ()}
 
 instance ToRenderable Chart where
   toRenderable (Chart x) = toRenderable x
+
+-- instance ToArg Chart where
+--   toArg s = Right ("Chart do{ " ++ s ++ "}")
+
+parseChart :: String -> Doc IO (Either InterpreterError Chart)
+parseChart s =
+  lift $ runInterpreter $ do
+    loadModules ["Grammata.Chart"]
+    setImports ["Prelude", "Grammata.Types", "Grammata.Chart", "Graphics.Rendering.Chart.Easy"]
+    interpret s (as :: Chart)
 
 mychart :: Chart
 mychart = Chart $ do

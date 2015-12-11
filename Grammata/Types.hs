@@ -70,6 +70,9 @@ instance ToArg Int
 instance ToArg Integer
 instance ToArg Double
 
+instance ToArg String where
+  toArg = Right
+
 instance ToArg Bool where
   toArg s = case map toLower s of
              "true"  -> Right True

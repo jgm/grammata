@@ -1,11 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Grammata.Base.Html (lit, emph, today, para, heading, doc) where
+module Grammata.Base.Html (lit, emph, today, chart, para, heading, doc) where
 
 import Grammata.Types
 import Data.Monoid
 import Grammata.Base.Common (todayS)
-import Data.ByteString.Builder (Builder, charUtf8, stringUtf8)
+import Data.ByteString.Builder (Builder, charUtf8, stringUtf8, lazyByteString)
+import Grammata.Chart
+import Grammata.Util (showInterpreterError)
+import Control.Monad.RWS
 
 lit :: Monad m => String -> Doc m Inline
 lit = return . escapeHtml
@@ -15,6 +18,13 @@ emph = fmap (Inline . inTag "em" . unInline)
 
 today :: Doc IO Inline
 today = escapeHtml <$> todayS
+
+chart :: String -> Doc IO Block
+chart chraw = do
+  res <- parseChart chraw
+  case res of
+       Right ch -> (Block . lazyByteString) <$> liftIO (toSVG (300.0, 300.0) ch)
+       Left err -> fail (showInterpreterError err)
 
 para :: Monad m => Doc m Inline -> Doc m Block
 para = fmap (Block . inTag "p" . unInline)

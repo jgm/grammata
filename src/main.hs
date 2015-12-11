@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Grammata.Parse (interpretDoc)
-
+import Grammata.Util (showInterpreterError)
 import Options.Applicative hiding (UnknownError)
 import Control.Monad.RWS
 import Language.Haskell.Interpreter -- hint
@@ -46,10 +46,9 @@ runWithOptions opts = do
            (formatFormat $ format opts))
 
   case r of
-       Left (WontCompile es) -> mapM_ (hPutStrLn stderr . errMsg) es
-       Left (NotAllowed e) -> hPutStrLn stderr e
-       Left (UnknownError e) -> hPutStrLn stderr e
-       Left (GhcException e) -> hPutStrLn stderr e
+       Left e -> hPutStrLn stderr (showInterpreterError e)
        Right x  -> do
          render x >>= liftIO . BL.putStr
          liftIO $ BL.putStr "\n"
+
+
