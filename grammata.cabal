@@ -25,10 +25,12 @@ Library
     Build-depends:       base >= 4.5 && < 5, containers, text,
                          mtl, template-haskell, bytestring >= 0.10,
                          directory, process, temporary, time, hint, parsec,
-                         bytestring, split, exceptions
+                         bytestring, split, exceptions,
+                         Chart, Chart-diagrams
     Exposed-modules:     Grammata
                          Grammata.Types
                          Grammata.Parse
+                         Grammata.Chart
                          Grammata.Util
                          Grammata.Base.Html
                          Grammata.Base.Latex
