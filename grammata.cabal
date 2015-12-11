@@ -24,9 +24,11 @@ Flag executable
 Library
     Build-depends:       base >= 4.5 && < 5, containers, text,
                          mtl, template-haskell, bytestring >= 0.10,
-                         directory, process, temporary, time
+                         directory, process, temporary, time, hint, parsec,
+                         bytestring, split, exceptions
     Exposed-modules:     Grammata
                          Grammata.Types
+                         Grammata.Parse
                          Grammata.Util
                          Grammata.Base.Html
                          Grammata.Base.Tex
@@ -51,9 +53,8 @@ Executable grammata
     Ghc-Prof-Options:  -auto-all -caf-all
     if flag(executable)
       Buildable:         True
-      Build-Depends:     base >= 4.5 && < 5, grammata, parsec,
-                         template-haskell, split, text, hint,
-                         bytestring >= 0.10, exceptions
+      Build-Depends:     base >= 4.5 && < 5, grammata, hint, mtl,
+                         bytestring >= 0.10
     else
       Buildable:         False
 
