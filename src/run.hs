@@ -12,7 +12,7 @@ import Data.Text (Text)
 import Data.List (isPrefixOf, isSuffixOf, isInfixOf)
 import Data.List.Split (splitOn)
 import System.Environment
-import System.IO (stderr)
+import System.IO (stderr, hPutStrLn)
 import Text.Parsec
 import Data.Char (toUpper, toLower)
 import qualified Data.ByteString.Lazy as BL
@@ -39,8 +39,10 @@ main = do
   r <- runInterpreter (interpretDoc verbosity doc format)
 
   case r of
-       Left (WontCompile es) -> mapM_ (putStrLn . showCompileError file) es
-       Left err -> putStrLn (show err)
+       Left (WontCompile es) -> mapM_ (hPutStrLn stderr . showCompileError file) es
+       Left (NotAllowed e) -> hPutStrLn stderr e
+       Left (UnknownError e) -> hPutStrLn stderr e
+       Left (GhcException e) -> hPutStrLn stderr e
        Right x  -> do
          render x >>= liftIO . BL.putStr
          liftIO $ BL.putStr "\n"
@@ -54,9 +56,18 @@ showCompileError file e =
 
 interpretDoc :: Int -> String -> String -> Interpreter (Doc IO Block)
 interpretDoc verbosity doc format = do
-  loadModules ["Grammata.Base." ++ format]
+  let hdrlines = takeWhile ("%%" `isPrefixOf`) $ lines doc
+  let addFormat s = case reverse s of
+                         '*':xs -> reverse xs ++ format
+                         _ -> s
+  let modules = map (addFormat . drop 2) hdrlines
+  when (null modules) $
+    Catch.throwM $ UnknownError "You have not specified any modules to load"
+  loadModules modules
   set [languageExtensions := [TemplateHaskell, OverloadedStrings]]
-  setImports ["Prelude", "Grammata.Base." ++ format, "Data.String", "Data.Monoid", "Language.Haskell.TH", "Grammata.Types", "Control.Monad.RWS"]
+  setImports ("Prelude" : "Data.String" : "Data.Monoid" :
+               "Language.Haskell.TH" : "Grammata.Types" :
+               "Control.Monad.RWS" : modules)
   res <- parseDoc doc
   case res of
        Left e  -> error (show e)
