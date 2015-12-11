@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-import Debug.Trace
+-- import Debug.Trace
 import Control.Monad
 import qualified Control.Monad.Catch as Catch
 import Language.Haskell.Interpreter -- hint
@@ -9,7 +9,7 @@ import Grammata.Types
 import qualified Data.Text.IO as T
 import qualified Data.Text as T
 import Data.Text (Text)
-import Data.List (isPrefixOf, isSuffixOf, isInfixOf)
+import Data.List (isPrefixOf, isInfixOf)
 import Data.List.Split (splitOn)
 import System.Environment
 import System.IO (stderr, hPutStrLn)
@@ -39,20 +39,13 @@ main = do
   r <- runInterpreter (interpretDoc verbosity doc format)
 
   case r of
-       Left (WontCompile es) -> mapM_ (hPutStrLn stderr . showCompileError file) es
+       Left (WontCompile es) -> mapM_ (hPutStrLn stderr . errMsg) es
        Left (NotAllowed e) -> hPutStrLn stderr e
        Left (UnknownError e) -> hPutStrLn stderr e
        Left (GhcException e) -> hPutStrLn stderr e
        Right x  -> do
          render x >>= liftIO . BL.putStr
          liftIO $ BL.putStr "\n"
-
-showCompileError :: [Char] -> GhcError -> [Char]
-showCompileError file e =
-  if "<interactive>" `isPrefixOf` e'
-     then file ++ drop 13 e'
-     else e'
-  where e' = errMsg e
 
 interpretDoc :: Int -> String -> String -> Interpreter (Doc IO Block)
 interpretDoc verbosity doc format = do
@@ -78,7 +71,6 @@ interpretDoc verbosity doc format = do
 lookupCommand :: String -> Interpreter (Maybe (String, [String]))
 lookupCommand cmd = do
   xs <- typeSpecOf cmd
-  -- xs <- interpret ("$(toTypeSpec " ++ show cmd ++ ")") (as :: [String])
   return $
     if null xs
        then Nothing
