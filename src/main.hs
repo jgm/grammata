@@ -24,7 +24,7 @@ options = Options
      <> metavar "[1|2]"
      <> value 0
      <> help "Verbosity level" )
-  <*> argument str (metavar "[tex|html|pdf]")
+  <*> argument str (metavar "FORMAT")
   <*> argument str (metavar "FILE")
 
 main :: IO ()
