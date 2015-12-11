@@ -20,7 +20,14 @@ para :: Monad m => Doc m Inline -> Doc m Block
 para = fmap (Block . (<> "\n") . unInline)
 
 heading :: Monad m => HeaderLevel -> Doc m Inline -> Doc m Block
-heading _lev = fmap (Block . (\t -> "\\section{" <> t <> "}\n") . unInline)
+heading (HeaderLevel lev) =
+  fmap (Block . (\t -> "\\" <> cmd <> "{" <> t <> "}\n") . unInline)
+  where cmd = case lev of
+                    "1" -> "section*"
+                    "2" -> "subsection*"
+                    "3" -> "paragraph*"
+                    "4" -> "subparagraph*"
+                    _   -> "para"
 
 doc :: Monad m => Doc m Block -> Doc m Block
 doc d = para "\\documentclass{article}\n\\usepackage{fontspec}\n\\begin{document}\n\\fontsize{12}{15}\\fontspec[Ligatures={Common,Rare}, Alternate=1]{Hoefler Text}\n" <> d <> para "\\end{document}"
