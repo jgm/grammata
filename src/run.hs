@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
--- import Debug.Trace
+import Debug.Trace
 import Control.Monad
 import qualified Control.Monad.Catch as Catch
 import Language.Haskell.Interpreter -- hint
@@ -14,7 +14,7 @@ import Data.List.Split (splitOn)
 import System.Environment
 import System.IO (stderr, hPutStrLn)
 import Text.Parsec
-import Data.Char (toUpper, toLower)
+import Data.Char (toUpper, toLower, isLower)
 import qualified Data.ByteString.Lazy as BL
 
 main :: IO ()
@@ -91,8 +91,8 @@ typeSpecOf cmd = do
      then do
        ty <- map (\c -> if c == '\n' then ' ' else c) <$> typeOf cmd
        return $ splitOn " -> " $
-                 if "Monad m => " `isPrefixOf` ty
-                    then drop 11 ty
+                 if " => " `isInfixOf` ty
+                    then drop 3 $ dropWhile (/='=') ty
                     else ty
      else return []
 
@@ -106,31 +106,57 @@ pControlSeq = try $ do
   return cmd
 
 pInlineCommand :: Parser Text
-pInlineCommand = do
+pInlineCommand = try $ do
   cmd <- pControlSeq
   typespec <- lift $ lookupCommand cmd
   case typespec of
        Nothing               -> fail $ "Undefined command " ++ cmd
-       Just (x, args) | "Inline" `isSuffixOf` x ->
+       Just (x, args) | isInline (lastWord  x) ->
           ((T.pack cmd <> " ") <>) <$> processArgs args
        Just _                -> fail $ cmd ++ " does not return Inline"
 
 pBlockCommand :: Parser Text
-pBlockCommand = do
+pBlockCommand = try $ do
   cmd <- pControlSeq
   typespec <- lift $ lookupCommand cmd
   case typespec of
        Nothing              -> fail $ "Undefined command " ++ cmd
-       Just (x, args) | "Block" `isSuffixOf` x ->
+       Just (x, args) | isBlock (lastWord x) ->
           ((T.pack cmd <> " ") <>) <$> processArgs args
        Just _               -> fail $ cmd ++ " does not return Block"
+
+isInline :: String -> Bool
+isInline "Inline" = True
+isInline "Grammata.Types.Inline" = True
+isInline (c:_) = isLower c -- type variable
+isInline _ = False
+
+isBlock :: String -> Bool
+isBlock "Block" = True
+isBlock "Grammata.Types.Block" = True
+isBlock (c:_) = isLower c -- type variable
+isBlock _ = False
+
+lastWord :: String -> String
+lastWord [] = ""
+lastWord xs = last . words $ xs
+
+isTypeVar :: String -> Bool
+isTypeVar (c:_) = isLower c
+isTypeVar _ = False
 
 processArgs :: [String] -> Parser Text
 processArgs = fmap mconcat . mapM processArg
 
 processArg :: String -> Parser Text
-processArg x | "Doc" `isPrefixOf` x && "Inline" `isSuffixOf` x = pInlineArg
-processArg x | "Doc" `isPrefixOf` x && "Block" `isSuffixOf` x = pBlockArg
+processArg x | "Doc" `isPrefixOf` x =
+  case reverse (words x) of
+       "Grammata.Types.Inline":_ -> pInlineArg
+       "Inline":_ -> pInlineArg
+       "Grammata.Types.Block":_  -> pBlockArg
+       "Block":_  -> pBlockArg
+       s:_ | isTypeVar s -> pInlineArg <|> pBlockArg
+       _ -> fail $ "Unimplemented type " ++ x
 processArg x = try $ do
   spaces
   char '{'

@@ -1,7 +1,10 @@
 %%Grammata.Base.*
+%%Strange
 
 \doc{
 \heading{2}{My heading}
+
+\para{\rept{3}{hi there}.}
 
 \para{Today is \today.}
 
