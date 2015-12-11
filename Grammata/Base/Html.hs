@@ -23,7 +23,8 @@ heading :: Monad m => HeaderLevel -> Doc m Inline -> Doc m Block
 heading (HeaderLevel lev) ils = fmap (Block . inTag ("h" <> lev) . unInline) ils
 
 doc :: Monad m => Doc m Block -> Doc m Block
-doc = id
+doc d = return (Block "<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n</head>\n<body>\n") <> d <>
+        return (Block "\n</body>\n</html>")
 
 -- utility functions
 inTag :: String -> Builder -> Builder
