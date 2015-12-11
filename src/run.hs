@@ -25,7 +25,7 @@ main = do
          case args' of
               [(x:xs),y] -> ((toUpper x:map toLower xs),y)
               _ -> error $ "Usage:  " ++ progname ++
-                             "[-v1|-v2] [tex|html|pdf] file"
+                             "[-v1|-v2] [latex|html|pdf] file"
 
   doc <- if file == "-"
             then getContents

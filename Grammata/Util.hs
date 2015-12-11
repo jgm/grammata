@@ -1,4 +1,4 @@
-module Grammata.Util (runxetex) where
+module Grammata.Util (runxelatex) where
 
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
@@ -8,12 +8,12 @@ import System.Exit
 import System.IO
 import System.IO.Temp
 
-runxetex :: BL.ByteString -> IO B.ByteString
-runxetex b = withSystemTempDirectory "grammata.XXXX" $ \dir -> do
+runxelatex :: BL.ByteString -> IO B.ByteString
+runxelatex b = withSystemTempDirectory "grammata.XXXX" $ \dir -> do
     oldDir <- getCurrentDirectory
     setCurrentDirectory dir
     BL.writeFile "temp.tex" b
-    ec <- rawSystem "xetex" ["-interaction=nonstopmode", "temp.tex"]
+    ec <- rawSystem "xelatex" ["-interaction=nonstopmode", "temp.tex"]
     case ec of
         ExitFailure code -> do
           hPutStrLn stderr $ "Could not create PDF:"
