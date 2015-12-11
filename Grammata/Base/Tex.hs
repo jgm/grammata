@@ -1,20 +1,20 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Grammata.Base.Tex (lit, today, emph, para, heading, doc) where
+module Grammata.Base.Tex (lit, emph, today, para, heading, doc) where
 
 import Grammata.Types
-import Control.Monad.RWS
-import Data.Time
+import Data.Monoid
+import Grammata.Base.Common (todayS)
 import Data.ByteString.Builder (Builder, stringUtf8, charUtf8)
 
 lit :: Monad m => String -> Doc m Inline
 lit = return . escapeTeX
 
-today :: Doc IO Inline
-today = escapeTeX . show <$> liftIO (utctDay <$> getCurrentTime)
-
 emph :: Monad m => Doc m Inline -> Doc m Inline
 emph t = "{\\it " <> t <> "}"
+
+today :: Doc IO Inline
+today = escapeTeX <$> todayS
 
 para :: Monad m => Doc m Inline -> Doc m Block
 para = fmap (Block . (<> "\n") . unInline)

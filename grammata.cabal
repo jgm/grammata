@@ -31,6 +31,7 @@ Library
                          Grammata.Base.Html
                          Grammata.Base.Tex
                          Grammata.Base.Pdf
+                         Grammata.Base.Common
     if impl(ghc >= 6.12)
       Ghc-Options:     -Wall -fno-warn-unused-do-bind
     else

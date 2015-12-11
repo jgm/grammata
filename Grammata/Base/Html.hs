@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Grammata.Base.Html (lit, emph, para, heading, today, doc) where
+module Grammata.Base.Html (lit, emph, today, para, heading, doc) where
 
 import Grammata.Types
-import Control.Monad.RWS
-import Data.Time
+import Data.Monoid
+import Grammata.Base.Common (todayS)
 import Data.ByteString.Builder (Builder, charUtf8, stringUtf8)
 
 lit :: Monad m => String -> Doc m Inline
@@ -13,14 +13,14 @@ lit = return . escapeHtml
 emph :: Monad m => Doc m Inline -> Doc m Inline
 emph = fmap (Inline . inTag "em" . unInline)
 
+today :: Doc IO Inline
+today = escapeHtml <$> todayS
+
 para :: Monad m => Doc m Inline -> Doc m Block
 para = fmap (Block . inTag "p" . unInline)
 
 heading :: Monad m => HeaderLevel -> Doc m Inline -> Doc m Block
 heading (HeaderLevel lev) ils = fmap (Block . inTag ("h" <> lev) . unInline) ils
-
-today :: Doc IO Inline
-today = escapeHtml . show <$> liftIO (utctDay <$> getCurrentTime)
 
 doc :: Monad m => Doc m Block -> Doc m Block
 doc = id

@@ -1,10 +1,12 @@
 %%Grammata.Base.*
-%%Strange
+%%Grammata.Base.Common
 
 \doc{
 \heading{2}{My heading}
 
-\para{\rept{3}{hi there}.}
+\para{\rep{3}{hi }}
+
+\rep{3}{\para{hi}}
 
 \para{Today is \today.}
 
