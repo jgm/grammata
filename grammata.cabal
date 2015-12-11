@@ -44,7 +44,7 @@ Library
 
 Executable grammata
     Default-Language:    Haskell2010
-    Main-is:             grammata.hs
+    Main-is:             main.hs
     Hs-Source-Dirs:      src
     if impl(ghc >= 6.12)
       Ghc-Options:     -Wall -fno-warn-unused-do-bind
@@ -54,7 +54,7 @@ Executable grammata
     if flag(executable)
       Buildable:         True
       Build-Depends:     base >= 4.5 && < 5, grammata, hint, mtl,
-                         bytestring >= 0.10
+                         bytestring >= 0.10, optparse-applicative
     else
       Buildable:         False
 
