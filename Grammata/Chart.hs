@@ -34,7 +34,7 @@ toSVG (x, y) chart = fst <$> renderableToSVGString (toRenderable chart) x y
 
 writeEPS :: Chart -> (Double, Double) -> FilePath -> IO (PickFn ())
 writeEPS chart (x,y) filepath = do
-  let renderedchart :: ChartBackend (PickFn ())
+  let renderedchart :: BackendProgram (PickFn ())
       renderedchart = render (toRenderable chart) (x,y)
   env <- defaultEnv vectorAlignmentFns x y
   cBackendToEPSFile renderedchart env filepath

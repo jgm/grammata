@@ -10,14 +10,14 @@
 
 \para{Today is \today.}
 
-\chart{
-Chart $ do
-   let signal xs = [ (x,(sin (x*3.14159/45) + 1) /
-                              2 * (sin (x*3.14159/5))) | x <- xs ]
-   layout_title .= "Amplitude Modulation"
-   plot (line "am" [signal [0,(0.5)..400]])
-   plot (points "am points" (signal [0,7..400]))
-}
+%\chart{
+%Chart $ do
+%   let signal xs = [ (x,(sin (x*3.14159/45) + 1) /
+%                              2 * (sin (x*3.14159/5))) | x <- xs ]
+%   layout_title .= "Amplitude Modulation"
+%   plot (line "am" [signal [0,(0.5)..400]])
+%   plot (points "am points" (signal [0,7..400]))
+%}
 
 \para{\emph{Lorem ipsum dolor sit amet}, facete eloquentiam nec eu. Dicat ullum
 mea ei. Mutat officiis dissentias vim ut, tation mentitum consectetuer sit eu,
