@@ -6,14 +6,14 @@ To try it:
 
     stack install
     export GHC_PACKAGE_PATH=`stack path --snapshot-pkg-db`:
-    grammata TeX test.gram
+    grammata LaTeX test.gram
     grammata Html test.gram
     grammata PDF test.gram # requires xetex
 
 Take a look at `test.gram`, the source.
 
 Then look at `Grammata/Format/Html.hs` and
-`Grammata/Format/TeX.hs`, and `Grammata/Format/PDF.hs`.
+`Grammata/Format/LaTeX.hs`, and `Grammata/Format/PDF.hs`.
 
 You can see how typed Haskell definitions map on to
 commands in the tex-like syntax of `test.gram`.
